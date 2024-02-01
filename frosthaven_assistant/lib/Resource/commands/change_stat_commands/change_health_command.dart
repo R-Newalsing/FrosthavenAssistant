@@ -1,3 +1,5 @@
+import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
+
 import '../../../services/service_locator.dart';
 import '../../state/game_state.dart';
 import 'change_stat_command.dart';
@@ -24,6 +26,9 @@ class ChangeHealthCommand extends ChangeStatCommand {
     if (figure.health.value <= 0) {
       handleDeath();
     }
+
+    /// Buetooth stuff
+    BluetoothMethods.changeHealth(ownerId, figureId, figure.health.value);
   }
 
   @override

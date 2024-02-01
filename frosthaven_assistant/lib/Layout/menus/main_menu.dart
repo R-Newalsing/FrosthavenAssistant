@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:frosthaven_assistant/Layout/menus/add_character_menu.dart';
 import 'package:frosthaven_assistant/Layout/menus/add_section_menu.dart';
+import 'package:frosthaven_assistant/Layout/menus/bluetooth_menu.dart';
 import 'package:frosthaven_assistant/Layout/menus/loot_cards_menu.dart';
 import 'package:frosthaven_assistant/Layout/menus/remove_character_menu.dart';
 import 'package:frosthaven_assistant/Layout/menus/remove_monster_menu.dart';
 import 'package:frosthaven_assistant/Layout/menus/select_scenario_menu.dart';
 import 'package:frosthaven_assistant/Layout/menus/set_level_menu.dart';
 import 'package:frosthaven_assistant/Layout/menus/settings_menu.dart';
+import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant/services/network/client.dart';
 import 'package:frosthaven_assistant/services/service_locator.dart';
@@ -125,12 +127,12 @@ Drawer createMainMenu(BuildContext context) {
               ),
               const Divider(),
               ListTile(
-                      title: const Text('Set Scenario'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        openDialog(context, const SelectScenarioMenu());
-                      },
-                    ),
+                title: const Text('Set Scenario'),
+                onTap: () {
+                  Navigator.pop(context);
+                  openDialog(context, const SelectScenarioMenu());
+                },
+              ),
               ListTile(
                 title: const Text('Add Section'),
                 enabled: true,
@@ -161,7 +163,7 @@ Drawer createMainMenu(BuildContext context) {
                   openDialog(context, const SetLevelMenu());
                 },
               ),
-              if(gameState.currentCampaign.value == "Frosthaven")
+              if (gameState.currentCampaign.value == "Frosthaven")
                 ListTile(
                   title: const Text('Loot Deck Menu'),
                   onTap: () {
@@ -184,7 +186,9 @@ Drawer createMainMenu(BuildContext context) {
                   openDialog(context, const RemoveMonsterMenu());
                 },
               ),
-              if (gameState.showAllyDeck.value == false && !GameMethods.shouldShowAlliesDeck() && settings.showAmdDeck.value)
+              if (gameState.showAllyDeck.value == false &&
+                  !GameMethods.shouldShowAlliesDeck() &&
+                  settings.showAmdDeck.value)
                 ListTile(
                   title: const Text('Show Ally Attack Modifier Deck'),
                   onTap: () {
@@ -200,6 +204,15 @@ Drawer createMainMenu(BuildContext context) {
                 onTap: () {
                   Navigator.pop(context);
                   openDialog(context, const SettingsMenu());
+                },
+              ),
+              const Divider(),
+              ListTile(
+                title: const Text('Bluetooth'),
+                onTap: () {
+                  Navigator.pop(context);
+                  BluetoothMethods.showNumbers();
+                  openDialog(context, const BluetoothMenu());
                 },
               ),
               const Divider(),

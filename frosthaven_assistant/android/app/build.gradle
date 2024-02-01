@@ -48,8 +48,8 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.tarmslitaren.frosthaven_assistant"
-        minSdkVersion flutter.minSdkVersion
+        applicationId "com.notsodoom.frosthaven_assistant"
+        minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animation_progress_bar/flutter_animation_progress_bar.dart';
 import 'package:frosthaven_assistant/Layout/condition_icon.dart';
 import 'package:frosthaven_assistant/Layout/health_wheel_controller.dart';
+import 'package:frosthaven_assistant/Layout/menus/bluetooth_menu.dart';
+import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant/services/service_locator.dart';
 import '../Resource/color_matrices.dart';
@@ -102,6 +104,7 @@ class MonsterBoxState extends State<MonsterBox> {
     if (data.type == MonsterType.summon) {
       borderColor = Colors.blue;
     }
+
     BlendMode blendMode = BlendMode.hue;
     if (color == Colors.red) {
       blendMode = BlendMode.modulate;
@@ -127,142 +130,150 @@ class MonsterBoxState extends State<MonsterBox> {
     }
 
     return ColorFiltered(
-        //gray out if summoned this turn and it's still the character's/monster's turn
-        colorFilter: (data.roundSummoned == getIt<GameState>().round.value &&
-                ownerIsCurrent)
-            ? ColorFilter.matrix(grayScale)
-            : ColorFilter.matrix(identity),
-        child: Container(
-            padding: EdgeInsets.zero,
-            height: 30 * scale,
-            width: width,
-            decoration: BoxDecoration(
-              color: Color(int.parse("7A000000", radix: 16)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black45,
-                  blurRadius: 4 * scale,
-                  offset: Offset(2 * scale, 4 * scale), // Shadow position
-                ),
-              ],
+      //gray out if summoned this turn and it's still the character's/monster's turn
+      colorFilter: (data.roundSummoned == getIt<GameState>().round.value &&
+              ownerIsCurrent)
+          ? ColorFilter.matrix(grayScale)
+          : ColorFilter.matrix(identity),
+      child: Container(
+        padding: EdgeInsets.zero,
+        height: 30 * scale,
+        width: width,
+        decoration: BoxDecoration(
+          color: Color(int.parse("7A000000", radix: 16)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black45,
+              blurRadius: 4 * scale,
+              offset: Offset(2 * scale, 4 * scale), // Shadow position
             ),
-            //color: Color(int.parse("7A000000", radix: 16)),
-            //black with some opacity
-            child: Stack(alignment: Alignment.centerLeft, children: [
-              Image(
-                height: 30 * scale,
-                width: 47 * scale,
-                fit: BoxFit.fill,
-                color: borderColor,
-                colorBlendMode: blendMode,
-                // (works but not great),// BlendMode.modulate/color (good for boss), //BlendMode.saturation,(not good for bosss)
-                //scale up disregarding aspect ratio
-                image: const AssetImage("assets/images/psd/monster-box.png"),
-              ),
-              Container(
-                margin: EdgeInsets.only(
-                    left: 3 * scale, top: 3 * scale, bottom: 2 * scale),
-                child: Image(
+          ],
+        ),
+        //color: Color(int.parse("7A000000", radix: 16)),
+        //black with some opacity
+        child: Stack(alignment: Alignment.centerLeft, children: [
+          Image(
+            height: 30 * scale,
+            width: 47 * scale,
+            fit: BoxFit.fill,
+            color: borderColor,
+            colorBlendMode: blendMode,
+            // (works but not great),// BlendMode.modulate/color (good for boss), //BlendMode.saturation,(not good for bosss)
+            //scale up disregarding aspect ratio
+            image: const AssetImage("assets/images/psd/monster-box.png"),
+          ),
+          Container(
+            margin: EdgeInsets.only(
+                left: 3 * scale, top: 3 * scale, bottom: 2 * scale),
+            child: ValueListenableBuilder<int>(
+              valueListenable: getIt<GameState>().updateBluetoothContent,
+              builder: (context, value, child) {
+                return Image(
+                  color: BluetoothMethods.getNumberByMonsterInstane(data) > 0
+                      ? Colors.blue
+                      : null,
                   //fit: BoxFit.contain,
                   height: 100 * scale,
                   width: 17 * scale,
                   fit: BoxFit.cover,
                   filterQuality: FilterQuality.medium,
                   image: AssetImage(imagePath),
-                ),
-              ),
-              Positioned(
-                width: 22 * scale,
-                //baked in edge insets to line up with picture
-                top: 1 * scale,
-                child: Text(
-                  textAlign: TextAlign.center,
-                  standeeNr,
-                  style: TextStyle(
-                      color: color, fontSize: 20 * scale, shadows: [shadow]),
-                ),
-              ),
-              Positioned(
-                left: data.health.value > 99 ? 22 * scale : 23 * scale,
-                //width: width-20*scale,
-                top: 0,
+                );
+              },
+            ),
+          ),
+          Positioned(
+            width: 22 * scale,
+            //baked in edge insets to line up with picture
+            top: 1 * scale,
+            child: Text(
+              textAlign: TextAlign.center,
+              standeeNr,
+              style: TextStyle(
+                  color: color, fontSize: 20 * scale, shadows: [shadow]),
+            ),
+          ),
+          Positioned(
+            left: data.health.value > 99 ? 22 * scale : 23 * scale,
+            //width: width-20*scale,
+            top: 0,
 
-                child: Container(
-                    padding: EdgeInsets.zero,
-                    margin: EdgeInsets.zero,
-                    child: Row(children: [
-                      Column(children: [
-                        Image(
-                          //fit: BoxFit.contain,
-                          color: Colors.red,
-                          height: 7 * scale,
-                          image: const AssetImage("assets/images/blood.png"),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(bottom: 2 * scale),
-                          width: data.health.value > 99
-                              ? 21 * scale
-                              : 16.8 * scale,
-                          alignment: Alignment.center,
-                          child: Text(
-                            textAlign: TextAlign.end,
-                            "${data.health.value}",
-                            style: TextStyle(
-                                height: 1,
-                                color: Colors.white,
-                                fontSize: 16 * scale,
-                                shadows: [shadow]),
-                          ),
-                        )
-                      ]),
-                      SizedBox(
-                        width:
-                            data.health.value > 99 ? 4.5 * scale : 6.5 * scale,
+            child: Container(
+                padding: EdgeInsets.zero,
+                margin: EdgeInsets.zero,
+                child: Row(children: [
+                  Column(children: [
+                    Image(
+                      //fit: BoxFit.contain,
+                      color: Colors.red,
+                      height: 7 * scale,
+                      image: const AssetImage("assets/images/blood.png"),
+                    ),
+                    Container(
+                      margin: EdgeInsets.only(bottom: 2 * scale),
+                      width: data.health.value > 99 ? 21 * scale : 16.8 * scale,
+                      alignment: Alignment.center,
+                      child: Text(
+                        textAlign: TextAlign.end,
+                        "${data.health.value}",
+                        style: TextStyle(
+                            height: 1,
+                            color: Colors.white,
+                            fontSize: 16 * scale,
+                            shadows: [shadow]),
                       ),
-                      ValueListenableBuilder<List<Condition>>(
-                          valueListenable: data.conditions, //todo: dont use valuelistenabel for lists or sets
-                          builder: (context, value, child) {
-                            return SizedBox(
-                                height: 30 * scale,
-                                child: Wrap(
-                                  spacing: 0,
-                                  runSpacing: 0,
-                                  direction: Axis.vertical,
-                                  alignment: WrapAlignment.center,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: createConditionList(scale),
-                                ));
-                          }),
-                    ])),
-              ),
-              Container(
-                  //the hp bar
-                  margin: EdgeInsets.only(
-                      bottom: 2.5 * scale,
-                      left: 2.5 * scale,
-                      right: 2.7 * scale),
-                  alignment: Alignment.bottomCenter,
-                  width: 42 * scale,
-                  child: ValueListenableBuilder<int>(
-                      valueListenable: data.maxHealth,
+                    )
+                  ]),
+                  SizedBox(
+                    width: data.health.value > 99 ? 4.5 * scale : 6.5 * scale,
+                  ),
+                  ValueListenableBuilder<List<Condition>>(
+                      valueListenable: data
+                          .conditions, //todo: dont use valuelistenabel for lists or sets
                       builder: (context, value, child) {
-                        return FAProgressBar(
-                          currentValue: data.health.value.toDouble(),
-                          maxValue: data.maxHealth.value.toDouble(),
-                          size: 4.0 * scale,
-                          direction: Axis.horizontal,
-                          borderRadius: BorderRadius.circular(0),
-                          border: Border.all(
-                            color: Colors.black,
-                            width: 0.5 * scale,
-                          ),
-                          backgroundColor: Colors.black,
-                          progressColor: Colors.red,
-                          changeColorValue: (data.maxHealth.value).toInt(),
-                          changeProgressColor: Colors.green,
-                        );
-                      }))
-            ])));
+                        return SizedBox(
+                            height: 30 * scale,
+                            child: Wrap(
+                              spacing: 0,
+                              runSpacing: 0,
+                              direction: Axis.vertical,
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: createConditionList(scale),
+                            ));
+                      }),
+                ])),
+          ),
+          Container(
+            //the hp bar
+            margin: EdgeInsets.only(
+                bottom: 2.5 * scale, left: 2.5 * scale, right: 2.7 * scale),
+            alignment: Alignment.bottomCenter,
+            width: 42 * scale,
+            child: ValueListenableBuilder<int>(
+              valueListenable: data.maxHealth,
+              builder: (context, value, child) {
+                return FAProgressBar(
+                  currentValue: data.health.value.toDouble(),
+                  maxValue: data.maxHealth.value.toDouble(),
+                  size: 4.0 * scale,
+                  direction: Axis.horizontal,
+                  borderRadius: BorderRadius.circular(0),
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 0.5 * scale,
+                  ),
+                  backgroundColor: Colors.black,
+                  progressColor: Colors.red,
+                  changeColorValue: (data.maxHealth.value).toInt(),
+                  changeProgressColor: Colors.green,
+                );
+              },
+            ),
+          ),
+        ]),
+      ),
+    );
   }
 
   @override

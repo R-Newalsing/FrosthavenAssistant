@@ -326,7 +326,8 @@ class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
     List<String> bossOtherAttributes = [];
 
     for (String item in normal.attributes) {
-      if (frosthavenStyle && !bossAttackAttributes.contains("target") &&
+      if (frosthavenStyle &&
+          !bossAttackAttributes.contains("target") &&
           (item.startsWith('%wound%') ||
               item.startsWith('%poison%') ||
               item.startsWith("%brittle%"))) {
@@ -613,7 +614,8 @@ class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
                     width: 20 * scale + 8,
                     height: 20 * scale + 8,
                     child: ValueListenableBuilder<int>(
-                        valueListenable: getIt<GameState>().commandIndex,//todo: test widget.data.monsterInstances,
+                        valueListenable: getIt<GameState>()
+                            .commandIndex, //todo: test widget.data.monsterInstances,
                         builder: (context, value, child) {
                           bool allStandeesOut =
                               widget.data.monsterInstances.length ==
@@ -641,16 +643,16 @@ class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
                   width: 20 * scale + 8,
                   height: 20 * scale + 8,
                   child: ValueListenableBuilder<int>(
-                      valueListenable: getIt<GameState>().commandIndex,//TODO: test //widget.data.monsterInstances,
+                      valueListenable: getIt<GameState>()
+                          .commandIndex, //TODO: test //widget.data.monsterInstances,
                       builder: (context, value, child) {
                         return IconButton(
                             padding: const EdgeInsets.only(left: 8, top: 8),
                             icon: Image.asset(
-                                color:
-                                    widget.data.monsterInstances.length ==
-                                            widget.data.type.count
-                                        ? Colors.white24
-                                        : Colors.grey,
+                                color: widget.data.monsterInstances.length ==
+                                        widget.data.type.count
+                                    ? Colors.white24
+                                    : Colors.grey,
                                 height: 20 * scale,
                                 fit: BoxFit.fitHeight,
                                 colorBlendMode: BlendMode.modulate,

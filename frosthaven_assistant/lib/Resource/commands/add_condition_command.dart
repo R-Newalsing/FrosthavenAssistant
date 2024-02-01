@@ -1,3 +1,5 @@
+import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
+
 import '../../services/service_locator.dart';
 import '../enums.dart';
 import '../state/game_state.dart';
@@ -25,6 +27,9 @@ class AddConditionCommand extends Command {
       }
     }
     getIt<GameState>().updateList.value++;
+
+    /// Buetooth stuff
+    BluetoothMethods.toggleCondition(condition, figureId);
   }
 
   @override

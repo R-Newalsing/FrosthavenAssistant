@@ -1,3 +1,4 @@
+import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
 
 import '../../services/service_locator.dart';
 import '../enums.dart';
@@ -22,6 +23,9 @@ class RemoveConditionCommand extends Command {
     }
     figure.getMutableConditionsAddedPreviousTurn(stateAccess).remove(condition);
     getIt<GameState>().updateList.value++;
+
+    /// Buetooth stuff
+    BluetoothMethods.toggleCondition(condition, figureId);
   }
 
   @override

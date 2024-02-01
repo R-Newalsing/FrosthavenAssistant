@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
+import 'package:frosthaven_assistant/services/network/bluetooth.dart';
 import 'package:frosthaven_assistant/services/network/communication.dart';
 import 'package:frosthaven_assistant/services/network/network.dart';
 
@@ -129,6 +131,8 @@ class Client {
           _send("pong");
         } else if (message.startsWith("pong")) {
           _serverResponsive = true;
+        } else if (message.startsWith("BLE")) {
+          BluetoothMethods.handleMessage(message);
         }
       } else {
         _leftOverMessage = message;

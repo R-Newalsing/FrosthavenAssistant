@@ -32,8 +32,7 @@ class SettingsMenuState extends State<SettingsMenu> {
   final TextEditingController _serverTextController = TextEditingController();
   final TextEditingController _portTextController = TextEditingController();
 
-  final ScrollController scrollController =
-      ScrollController();
+  final ScrollController scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -216,13 +215,12 @@ class SettingsMenuState extends State<SettingsMenu> {
                                     });
                                   }),
                               CheckboxListTile(
-                                  title: const Text(
-                                      "Show Attack Modifier Decks"),
+                                  title:
+                                      const Text("Show Attack Modifier Decks"),
                                   value: settings.showAmdDeck.value,
                                   onChanged: (bool? value) {
                                     setState(() {
-                                      settings.showAmdDeck.value =
-                                      value!;
+                                      settings.showAmdDeck.value = value!;
                                       settings.saveToDisk();
                                       getIt<GameState>().updateAllUI();
                                     });
@@ -351,7 +349,8 @@ class SettingsMenuState extends State<SettingsMenu> {
                                       const Text("Clear unlocked characters"),
                                   onTap: () {
                                     setState(() {
-                                      getIt<GameState>().action(ClearUnlockedClassesCommand());
+                                      getIt<GameState>().action(
+                                          ClearUnlockedClassesCommand());
                                     });
                                   }),
                               const Text("Connect devices on local wifi:"),

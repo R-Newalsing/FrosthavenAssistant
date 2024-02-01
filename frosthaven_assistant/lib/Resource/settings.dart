@@ -249,7 +249,6 @@ class Settings {
     }
   }
 
-
   @override
   String toString() {
     return '{'

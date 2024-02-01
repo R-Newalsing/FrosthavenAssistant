@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import 'package:frosthaven_assistant/Layout/monster_ability_card.dart';
@@ -58,16 +57,15 @@ class MonsterWidgetState extends State<MonsterWidget> {
         (index) => AnimatedSize(
               //not really needed now
               //TODO: try change to AnimatedContainer, and make sure to update the width on death (same time as death animation)
-              key: Key(widget.data.monsterInstances[index].standeeNr
-                  .toString()),
+              key:
+                  Key(widget.data.monsterInstances[index].standeeNr.toString()),
               duration: const Duration(milliseconds: 300),
               child: MonsterBox(
-                  key: Key(widget.data.monsterInstances[index].standeeNr
-                      .toString()),
+                  key: Key(
+                      widget.data.monsterInstances[index].standeeNr.toString()),
                   figureId: widget.data.monsterInstances[index].name +
                       widget.data.monsterInstances[index].gfx +
-                      widget.data.monsterInstances[index].standeeNr
-                          .toString(),
+                      widget.data.monsterInstances[index].standeeNr.toString(),
                   ownerId: widget.data.id,
                   displayStartAnimation: displayStartAnimation,
                   blockInput: false,
@@ -167,8 +165,7 @@ class MonsterWidgetState extends State<MonsterWidget> {
                   ),
                 )),
             Container(
-              margin: EdgeInsets.only(
-                  left: 3.2 * scale, right: 3.2 * scale),
+              margin: EdgeInsets.only(left: 3.2 * scale, right: 3.2 * scale),
               width: getMainListWidth(context) - 3.2 * scale,
               child: ValueListenableBuilder<int>(
                   valueListenable: getIt<GameState>().killMonsterStandee,

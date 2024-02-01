@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant/Resource/settings.dart';
 import '../service_locator.dart';
@@ -92,9 +93,7 @@ class Server {
       } else {
         getIt<Network>().networkMessage.value = 'Server Offline';
       }
-      _serverSocket!.close().catchError((error) =>
-        log(error.toString())
-      );
+      _serverSocket!.close().catchError((error) => log(error.toString()));
 
       _connection.removeAll();
     }
@@ -143,8 +142,7 @@ class Server {
                 String description = messageParts2[0];
                 String data = messageParts2[1];
 
-                log(
-                    'Server Receive Data, index: $indexString, description:$description');
+                log('Server Receive Data, index: $indexString, description:$description');
 
                 int newIndex = int.parse(indexString);
                 if (newIndex > _gameState.commandDescriptions.length) {
@@ -170,8 +168,7 @@ class Server {
                   //client.write('your gameState changes received by server');
                 } else {
                   //getIt<Network>().networkMessage.value = "index mismatch: ignoring incoming message";
-                  log(
-                      'Got same or lower index. ignoring: received index: $newIndex current index ${_gameState.commandIndex.value}');
+                  log('Got same or lower index. ignoring: received index: $newIndex current index ${_gameState.commandIndex.value}');
 
                   //overwrite client state with current server state.
                   sendToOnly(
@@ -204,8 +201,7 @@ class Server {
                       print("?");
                     }
                   }
-                  log(
-                      'Server sends init response: "S3nD:Index:${_gameState.commandIndex.value}Description:$commandDescription');
+                  log('Server sends init response: "S3nD:Index:${_gameState.commandIndex.value}Description:$commandDescription');
                   sendToOnly(
                       "Index:${_gameState.commandIndex.value}Description:${commandDescription}GameState:${_gameState.gameSaveStates.last!.getState()}",
                       client);
@@ -221,6 +217,8 @@ class Server {
               } else if (message.startsWith("ping")) {
                 log('ping from ${client.remoteAddress}');
                 sendToOnly("pong", client);
+              } else if (message.startsWith("BLE")) {
+                BluetoothMethods.handleMessage(message);
               }
             } else {
               leftOverMessage = message;

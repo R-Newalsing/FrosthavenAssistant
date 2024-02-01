@@ -56,7 +56,9 @@ abstract class ChangeStatCommand extends Command {
         //handle summon death
         for (var instance in item.characterState.summonList) {
           if (instance.health.value == 0) {
-            item.characterState.getMutableSummonList(stateAccess).remove(instance);
+            item.characterState
+                .getMutableSummonList(stateAccess)
+                .remove(instance);
             Future.delayed(const Duration(milliseconds: 600), () {
               getIt<GameState>().killMonsterStandee.value++;
             });
