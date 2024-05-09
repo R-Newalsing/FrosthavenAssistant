@@ -85,7 +85,8 @@ class GameMethods {
         if (item is Monster) {
           if (item.type.deck == deck.name) {
             if (item.monsterInstances.isNotEmpty || item.isActive) {
-              if (deck.lastRoundDrawn < _gameState.round.value) {
+              if (deck.lastRoundDrawn != _gameState.totalRounds.value) {
+                //do not draw new card in case drawn already this round
                 deck.draw(stateModifier);
                 break;
               }
@@ -246,8 +247,15 @@ class GameMethods {
           _gameState._currentList = newList;
           return;
         } else {
-          //in case initiative is earlier than current turn, place just after current turn item
-          newList.insert(currentTurnItemIndex + 1, item);
+          //in case initiative is earlier than current turn, ignore anything current turn, and earlier and place later
+          int insertIndex = currentTurnItemIndex + 1;
+          for (int j = currentTurnItemIndex + 1; j < newList.length; j++) {
+            if (getInitiative(newList[j]) >= initiative) {
+              insertIndex = j;
+              break;
+            }
+          }
+          newList.insert(insertIndex, item);
           _gameState._currentList = newList;
           return;
         }
@@ -374,14 +382,69 @@ class GameMethods {
     _gameState._roundState.value = state;
   }
 
-  static void setLevel(_StateModifier _, int level) {
-    _gameState._level.value = level;
+  static void setLevel(_StateModifier _, int level, String? monsterId) {
+    if (monsterId == null) {
+      _gameState._level.value = level;
+      for (var item in _gameState.currentList) {
+        if (item is Monster) {
+          item.setLevel(_, level);
+        }
+      }
+      GameMethods.updateForSpecialRules(_);
+    } else {
+      Monster? monster;
+      for (var item in _gameState.currentList) {
+        if (item.id == monsterId) {
+          monster = item as Monster;
+        }
+      }
+      monster!.setLevel(_, level);
+    }
+  }
+
+  static void applyDifficulty(_StateModifier _) {
+    if (_gameState.autoScenarioLevel.value == true) {
+      //adjust difficulty
+      int newLevel =
+          GameMethods.getRecommendedLevel() + _gameState.difficulty.value;
+      if (newLevel > 7) {
+        newLevel = 7;
+      }
+      GameMethods.setLevel(_, newLevel, null);
+    }
+  }
+
+  static void setCharacterLevel(
+      _StateModifier _, int level, String characterId) {
+    Character? character;
+    for (var item in _gameState.currentList) {
+      if (item.id == characterId) {
+        character = item as Character;
+        break;
+      }
+    }
+    character!.characterState.setFigureLevel(_, level);
+    character.characterState
+        .setHealth(_, character.characterClass.healthByLevel[level - 1]);
+    character.characterState
+        .setMaxHealth(_, character.characterState.health.value);
+
+    if (character.id == "Beast Tyrant") {
+      if (character.characterState.summonList.isNotEmpty) {
+        //create the bear summon
+        final int bearHp = 8 + character.characterState.level.value * 2;
+        character.characterState.summonList[0].setMaxHealth(_, bearHp);
+        character.characterState.summonList[0].setHealth(_, bearHp);
+      }
+    }
+
+    GameMethods.applyDifficulty(_);
   }
 
   static void setScenario(_StateModifier _, String scenario, bool section) {
     if (!section) {
       //first reset state
-      GameMethods.setRound(_, 1);
+      GameMethods.setRound(_, 1, true);
       _gameState.showAllyDeck.value = false;
       _gameState._currentAbilityDecks.clear();
       _gameState._scenarioSpecialRules.clear();
@@ -430,6 +493,7 @@ class GameMethods {
           _gameState._lootDeck = LootDeck.from(_gameState.lootDeck);
         }
       } else {
+        //todo: remove. no need for custom loot deck
         if (_gameState.currentCampaign.value == "Frosthaven") {
           //add loot deck for random scenarios
           LootDeckModel? lootDeckModel =
@@ -447,6 +511,7 @@ class GameMethods {
     List<String> monsters = [];
     List<SpecialRule> specialRules = [];
     List<RoomMonsterData> roomMonsterData = [];
+    List<String> subSections = [];
 
     String initMessage = "";
     if (section) {
@@ -475,6 +540,9 @@ class GameMethods {
           roomMonsterData = scenarioData.monsterStandees != null
               ? scenarioData.monsterStandees!.toList()
               : [];
+          for (var item in scenarioData.sections) {
+            subSections.add(item.name);
+          }
         }
       }
     }
@@ -568,7 +636,7 @@ class GameMethods {
       }
 
       if (item.type == "ResetRound") {
-        GameMethods.setRound(_, 1);
+        GameMethods.setRound(_, 1, false);
       }
     }
 
@@ -670,6 +738,18 @@ class GameMethods {
       }
       _gameState._scenarioSpecialRules.addAll(specialRules);
       _gameState._scenarioSectionsAdded.add(scenario);
+    }
+
+    //handle random sections
+    var rule = specialRules
+        .firstWhereOrNull((element) => element.type == "RandomSections");
+    if (rule != null) {
+      subSections.shuffle();
+      //add the random selected to rule.list
+      SpecialRule newRule = SpecialRule("RandomSections", "", 0, 0, 0, "",
+          subSections.sublist(0, 3), false, "");
+      specialRules.remove(rule);
+      specialRules.add(newRule);
     }
 
     _gameState.updateList.value++;
@@ -787,7 +867,6 @@ class GameMethods {
   }
 
   //note: while this changes the game state, it is a state used also by non game related instances.
-  //todo: this should potentially NOT be a state variable?
   static void setToastMessage(String message) {
     _gameState._toastMessage.value = message;
   }
@@ -897,7 +976,7 @@ class GameMethods {
     }
 
     //make sure summons can not have same gfx and nr:
-    if (instance.standeeNr != 0) {
+    if (instance.standeeNr != 0 && summon != null) {
       bool ok = false;
       while (!ok) {
         ok = true;
@@ -908,7 +987,7 @@ class GameMethods {
               instance = MonsterInstance.summon(
                   instance.standeeNr + 1,
                   type,
-                  summon!.name,
+                  summon.name,
                   summon.health,
                   summon.move,
                   summon.attack,
@@ -1363,7 +1442,6 @@ class GameMethods {
       newIndex = index;
     }
 
-    //TODO: can get mutable item from builtList?! or is this non functioning?
     for (; newIndex < _gameState.currentList.length; newIndex++) {
       ListItemData data = _gameState.currentList[newIndex];
       if (data is Monster) {
@@ -1471,8 +1549,13 @@ class GameMethods {
     return null;
   }
 
-  static void setRound(_StateModifier _, int round) {
+  static void setRound(_StateModifier _, int round, bool resetTotal) {
     _gameState._round.value = round;
+    if (resetTotal) {
+      _gameState._totalRounds.value = round;
+    } else {
+      _gameState._totalRounds.value++;
+    }
   }
 
   static void setCampaign(_StateModifier _, String campaign) {

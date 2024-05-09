@@ -4,6 +4,7 @@ import 'package:frosthaven_assistant/Resource/enums.dart';
 import 'package:frosthaven_assistant/Resource/line_builder/frosthaven_converter.dart';
 import 'package:frosthaven_assistant/Resource/line_builder/stat_applier.dart';
 import 'package:frosthaven_assistant/Resource/ui_utils.dart';
+
 import '../state/game_state.dart';
 
 class LineBuilder {
@@ -266,7 +267,6 @@ class LineBuilder {
         color: Colors.yellow,
         fontSize: frosthavenStyle ? 13.1 * scale : 12.56 * scale,
         height: frosthavenStyle ? 0.84 : 0.85,
-        //0.8,
         shadows: [shadow]);
 
     var eliteSmallStyle = TextStyle(
@@ -695,7 +695,6 @@ class LineBuilder {
                               ? 1.0
                               : 1.1
                           : 1.0,
-                      // 0.8,
 
                       shadows: [
                         shadow
@@ -839,12 +838,12 @@ class LineBuilder {
 
       //TODO: add animation on other texts too? and need to animate icons as well then for FH style
       bool shouldAnimate = animate &&
-          (line.contains('Disadvantage') ||
+          (line.toLowerCase().contains('disadvantage') ||
               line.contains('retaliate') ||
               line.contains('shield')) &&
           (monster.isActive || monster.monsterInstances.isNotEmpty);
       if (monster.turnState == TurnsState.current) {
-        if (line.contains("Advantage")) {
+        if (line.toLowerCase().contains("advantage")) {
           shouldAnimate = true;
         }
       }

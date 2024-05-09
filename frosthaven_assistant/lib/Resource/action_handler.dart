@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:frosthaven_assistant/Resource/settings.dart';
+
 import '../services/network/communication.dart';
 import '../services/network/network.dart';
 import '../services/service_locator.dart';
@@ -20,8 +21,7 @@ class ActionHandler {
     getIt<GameState>().updateList.value++;
     getIt<GameState>().updateForUndo.value++;
     getIt<GameState>().killMonsterStandee.value++;
-    //try to update card widget her eif needed
-
+    //try to update card widget here if needed
     //try to update element buttons here if needed
   }
 
@@ -33,22 +33,19 @@ class ActionHandler {
     bool isServer = getIt<Settings>().server.value;
     bool isClient = getIt<Settings>().client.value == ClientState.connected;
     if (!isClient) {
-      if (commandIndex.value >= 0 &&
-          gameSaveStates[commandIndex.value] != null) {
-        gameSaveStates[commandIndex.value]!
-            .load(); //this works as gameSaveStates has one more entry than command list (includes load at start)
-        gameSaveStates[commandIndex.value]!.saveToDisk();
+      if (commandIndex.value >= 0 && gameSaveStates[commandIndex.value] != null) {
+        gameSaveStates[commandIndex.value]!.load(getIt<
+            GameState>()); //this works as gameSaveStates has one more entry than command list (includes load at start)
+        gameSaveStates[commandIndex.value]!.saveToDisk(getIt<GameState>());
         if (!isServer && !isClient) {
-          commands[commandIndex.value]!
-              .undo(); //currently undo only makes sure ui is updated...
+          commands[commandIndex.value]!.undo(); //undo only makes sure ui is updated
         } else {
           updateAllUI();
           //run generic update all function instead, as commands list is not retained
 
           //send last game state if connected
           if (isServer) {
-            log(
-                'server sends, undo index: ${commandIndex.value}, description:${commandDescriptions[commandIndex.value]}');
+            log('server sends, undo index: ${commandIndex.value}, description:${commandDescriptions[commandIndex.value]}');
             //should send a special undo message? yes
             getIt<Network>().server.send(
                 "Index:${commandIndex.value}Description:${commandDescriptions[commandIndex.value]}GameState:${gameSaveStates[commandIndex.value]!.getState()}");
@@ -70,8 +67,8 @@ class ActionHandler {
     if (!isClient) {
       if (commandIndex.value < commandDescriptions.length - 1) {
         commandIndex.value++;
-        gameSaveStates[commandIndex.value + 1]!.load();
-        gameSaveStates[commandIndex.value + 1]!.saveToDisk();
+        gameSaveStates[commandIndex.value + 1]!.load(getIt<GameState>());
+        gameSaveStates[commandIndex.value + 1]!.saveToDisk(getIt<GameState>());
         //also run generic update ui function
         updateAllUI();
       } else {
@@ -81,8 +78,7 @@ class ActionHandler {
 
       //send last game state if connected
       if (isServer) {
-        log(
-            'server sends, redo index: ${commandIndex.value}, description:${commandDescriptions[commandIndex.value]}');
+        log('server sends, redo index: ${commandIndex.value}, description:${commandDescriptions[commandIndex.value]}');
         getIt<Network>().server.send(
             "Index:${commandIndex.value}Description:${commandDescriptions[commandIndex.value]}GameState:${gameSaveStates[commandIndex.value + 1]!.getState()}");
       }
@@ -107,8 +103,7 @@ class ActionHandler {
     //remove possible redo list
     if (commands.length - 1 > commandIndex.value) {
       commands.removeRange(commandIndex.value + 1, commands.length);
-      commandDescriptions.removeRange(
-          commandIndex.value + 1, commandDescriptions.length);
+      commandDescriptions.removeRange(commandIndex.value + 1, commandDescriptions.length);
     }
     if (gameSaveStates.length > commandIndex.value + 1) {
       //remove future game states
@@ -118,18 +113,16 @@ class ActionHandler {
 
     //send last game state if connected
     if (isServer) {
-      log(
-          'server sends, index: ${commandIndex.value}, description:${command.describe()}');
+      log('server sends, index: ${commandIndex.value}, description:${command.describe()}');
       getIt<Network>().server.send(
           "Index:${commandIndex.value}Description:${command.describe()}GameState:${gameSaveStates.last!.getState()}");
     } else if (isClient) {
-      log(
-          'client sends, index: ${commandIndex.value}, description:${command.describe()}');
+      log('client sends, index: ${commandIndex.value}, description:${command.describe()}');
       _communication.sendToAll(
           "Index:${commandIndex.value}Description:${command.describe()}GameState:${gameSaveStates.last!.getState()}");
     }
 
-    //TODO: this is breaking if command index is not in sync with commands. aa in connected state.
+    //TODO: this is breaking if command index is not in sync with commands. and in connected state.
     //really need to go over this again: do we really need to save commands at all, or are save states + descriptions enough also for offline?
     if (commandIndex.value >= maxUndo) {
       if (commands.length > commandIndex.value) {

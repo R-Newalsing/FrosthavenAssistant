@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import '../Resource/commands/draw_command.dart';
 import '../Resource/commands/next_round_command.dart';
 import '../Resource/enums.dart';
-import '../Resource/state/game_state.dart';
 import '../Resource/settings.dart';
+import '../Resource/state/game_state.dart';
 import '../Resource/ui_utils.dart';
 import '../services/service_locator.dart';
 
 class DrawButton extends StatefulWidget {
   const DrawButton({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
    DrawButtonState createState() => DrawButtonState();
@@ -36,7 +36,6 @@ class DrawButtonState extends State<DrawButton> {
         if (_gameState.currentList.isEmpty) {
           text = "Add characters first.";
         }
-        //TODO: show other message if no characters or no monsters
         showToast(context, text);
       }
     } else {
@@ -62,13 +61,32 @@ class DrawButtonState extends State<DrawButton> {
           );
 
           return Stack(alignment: Alignment.centerLeft, children: [
+            ValueListenableBuilder<int>(
+              valueListenable: _gameState.round,
+              builder: (context, value, child) {
+                String text = _gameState.round.value.toString();
+                if(_gameState.totalRounds.value != _gameState.round.value) {
+                  text = "${"$text(${_gameState.totalRounds.value}"})";
+                }
+                return Positioned(
+                    bottom: 2 * settings.userScalingBars.value,
+                    left: 45 * settings.userScalingBars.value,
+                    // width: 60,
+                    child: Text(text,
+                        style: TextStyle(
+                          fontSize: 14 * settings.userScalingBars.value,
+                          color: Colors.white,
+                          shadows: [shadow],
+                        )));
+              },
+            ),
             ValueListenableBuilder<RoundState>(
               valueListenable: _gameState.roundState,
               builder: (context, value, child) {
                 return Container(
                     margin: EdgeInsets.zero,
                     height: 40 * settings.userScalingBars.value,
-                    width: 60 * settings.userScalingBars.value,
+                    width: (_gameState.totalRounds.value != _gameState.round.value ? 75 : 60) * settings.userScalingBars.value,
                     child: TextButton(
                         style: TextButton.styleFrom(
                             padding: EdgeInsets.only(
@@ -89,21 +107,6 @@ class DrawButtonState extends State<DrawButton> {
                             color: Colors.white,
                             shadows: [shadow],
                           ),
-                        )));
-              },
-            ),
-            ValueListenableBuilder<int>(
-              valueListenable: _gameState.round,
-              builder: (context, value, child) {
-                return Positioned(
-                    bottom: 2 * settings.userScalingBars.value,
-                    right: 3.5 * settings.userScalingBars.value,
-                    // width: 60,
-                    child: Text(_gameState.round.value.toString(),
-                        style: TextStyle(
-                          fontSize: 14 * settings.userScalingBars.value,
-                          color: Colors.white,
-                          shadows: [shadow],
                         )));
               },
             )

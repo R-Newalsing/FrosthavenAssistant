@@ -1,34 +1,28 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:frosthaven_assistant/Layout/section_button.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
+
 import '../Model/scenario.dart';
 import '../Resource/game_data.dart';
 import '../Resource/settings.dart';
 import '../services/service_locator.dart';
 
-class SectionList extends StatefulWidget {
-  const SectionList({Key? key}) : super(key: key);
-
-  @override
-  SectionListState createState() => SectionListState();
-}
-
-class SectionListState extends State<SectionList> {
-  @override
-  void initState() {
-    super.initState();
-  }
+class SectionList extends StatelessWidget {
+  const SectionList({super.key});
 
   List<Widget> generateList(List<ScenarioModel> inputList) {
     List<Widget> list = [];
-    for (int index = 0; index < inputList.length; index++) {
-      var item = inputList[index];
-      if (!item.name.contains("spawn")) {
-        SectionButton value =
-            SectionButton(key: Key(item.name), data: item.name);
-        list.add(value);
+   // if(inputList.length <=20) { //arbitrary limit, so view is not filled up with extra buttons
+      for (int index = 0; index < inputList.length; index++) {
+        var item = inputList[index];
+        if (!item.name.contains("spawn")) {
+          SectionButton value =
+          SectionButton(key: Key(item.name), data: item.name);
+          list.add(value);
+        }
       }
-    }
+    //}
     return list;
   }
 
@@ -49,6 +43,19 @@ class SectionListState extends State<SectionList> {
                     ?.scenarios[gameState.scenario.value]
                     ?.sections
                     .toList();
+
+                //handle random list
+                var randomSections = gameState.scenarioSpecialRules.firstWhereOrNull((element) => element.type == "RandomSections");
+                if(randomSections != null && list != null) {
+                  List<ScenarioModel> newList = [];
+                  for(var item in randomSections.list) {
+                    var section = list.firstWhereOrNull((element) => element.name == item);
+                    if(section != null) {
+                      newList.add(section);
+                    }
+                  }
+                  list = newList;
+                }
 
                 if (getIt<Settings>().autoAddStandees.value == false) {
                   //filter out all sections with only room data
@@ -71,6 +78,7 @@ class SectionListState extends State<SectionList> {
                   list = [];
                 }
                 list ??= [];
+
                 return Wrap(
                     alignment: WrapAlignment.center,
                     spacing: 4 * scale,

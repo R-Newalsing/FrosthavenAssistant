@@ -2,35 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:frosthaven_assistant/Layout/menus/add_standee_menu.dart';
 import 'package:frosthaven_assistant/Model/monster.dart';
 import 'package:frosthaven_assistant/Resource/commands/activate_monster_type_command.dart';
-import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant/Resource/scaling.dart';
 import 'package:frosthaven_assistant/Resource/settings.dart';
+import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant/services/service_locator.dart';
 
 import '../Resource/commands/add_standee_command.dart';
 import '../Resource/enums.dart';
+import '../Resource/line_builder/line_builder.dart';
 import '../Resource/stat_calculator.dart';
 import '../Resource/ui_utils.dart';
-import '../Resource/line_builder/line_builder.dart';
 import 'menus/stat_card_zoom.dart';
 
-class MonsterStatCardWidget extends StatefulWidget {
+class MonsterStatCardWidget extends StatelessWidget {
   final Monster data;
 
   const MonsterStatCardWidget({
-    Key? key,
+    super.key,
     required this.data,
-  }) : super(key: key);
-
-  @override
-  MonsterStatCardWidgetState createState() => MonsterStatCardWidgetState();
-}
-
-class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
-  @override
-  void initState() {
-    super.initState();
-  }
+  });
 
   static void _handleAddPressed(
       Monster data, BuildContext context, bool left, bool isBoss) {
@@ -590,7 +580,7 @@ class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
   Widget build(BuildContext context) {
     double scale = getScaleByReference(context);
 
-    bool isBoss = widget.data.type.levels[widget.data.level.value].boss != null;
+    bool isBoss = data.type.levels[data.level.value].boss != null;
 
     return SizedBox(
         //height: 93.5 * scale,
@@ -598,14 +588,12 @@ class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
         child: Stack(children: [
           GestureDetector(
               onDoubleTap: () {
-                setState(() {
-                  openDialog(
-                      context,
-                      //problem: context is of stat card widget, not the + button
-                      StatCardZoom(monster: widget.data));
-                });
+                openDialog(
+                    context,
+                    //problem: context is of stat card widget, not the + button
+                    StatCardZoom(monster: data));
               },
-              child: buildCard(widget.data, scale)),
+              child: buildCard(data, scale)),
           if (!isBoss)
             Positioned(
                 bottom: 4 * scale,
@@ -614,12 +602,10 @@ class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
                     width: 20 * scale + 8,
                     height: 20 * scale + 8,
                     child: ValueListenableBuilder<int>(
-                        valueListenable: getIt<GameState>()
-                            .commandIndex, //todo: test widget.data.monsterInstances,
+                        valueListenable: getIt<GameState>().commandIndex,
                         builder: (context, value, child) {
                           bool allStandeesOut =
-                              widget.data.monsterInstances.length ==
-                                  widget.data.type.count;
+                              data.monsterInstances.length == data.type.count;
                           return IconButton(
                             padding: const EdgeInsets.only(right: 8, top: 8),
                             icon: Image.asset(
@@ -631,8 +617,7 @@ class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
                                 colorBlendMode: BlendMode.modulate,
                                 'assets/images/psd/add.png'),
                             onPressed: () {
-                              _handleAddPressed(
-                                  widget.data, context, true, false);
+                              _handleAddPressed(data, context, true, false);
                             },
                           );
                         }))),
@@ -643,14 +628,13 @@ class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
                   width: 20 * scale + 8,
                   height: 20 * scale + 8,
                   child: ValueListenableBuilder<int>(
-                      valueListenable: getIt<GameState>()
-                          .commandIndex, //TODO: test //widget.data.monsterInstances,
+                      valueListenable: getIt<GameState>().commandIndex,
                       builder: (context, value, child) {
                         return IconButton(
                             padding: const EdgeInsets.only(left: 8, top: 8),
                             icon: Image.asset(
-                                color: widget.data.monsterInstances.length ==
-                                        widget.data.type.count
+                                color: data.monsterInstances.length ==
+                                        data.type.count
                                     ? Colors.white24
                                     : Colors.grey,
                                 height: 20 * scale,
@@ -658,8 +642,7 @@ class MonsterStatCardWidgetState extends State<MonsterStatCardWidget> {
                                 colorBlendMode: BlendMode.modulate,
                                 'assets/images/psd/add.png'),
                             onPressed: () {
-                              _handleAddPressed(
-                                  widget.data, context, false, isBoss);
+                              _handleAddPressed(data, context, false, isBoss);
                             });
                       }))),
         ]));

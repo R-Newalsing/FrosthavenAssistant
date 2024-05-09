@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert' show utf8;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -7,11 +8,9 @@ import 'package:frosthaven_assistant/services/network/bluetooth.dart';
 import 'package:frosthaven_assistant/services/network/communication.dart';
 import 'package:frosthaven_assistant/services/network/network.dart';
 
-import '../../Resource/state/game_state.dart';
 import '../../Resource/settings.dart';
+import '../../Resource/state/game_state.dart';
 import '../service_locator.dart';
-import 'dart:convert' show utf8;
-
 import 'connection.dart';
 
 class Client {
@@ -95,7 +94,7 @@ class Client {
   }
 
   void onListenData(Uint8List data) {
-    String message = utf8.decode(data); // String.fromCharCodes(data);
+    String message = utf8.decode(data);
     message = _leftOverMessage + message;
     _leftOverMessage = "";
 
@@ -103,6 +102,7 @@ class Client {
     //handle
     for (var message in messages) {
       if (message.endsWith("[EOM]")) {
+        _serverResponsive = true;
         message = message.substring(0, message.length - "[EOM]".length);
         if (message.startsWith("Mismatch:")) {
           message = message.substring("Mismatch:".length);
@@ -119,12 +119,15 @@ class Client {
           debugPrint(
               'Client Receive Data, index: $indexString, description:$description');
 
+          //the order here is important, when animation checks are comparing to old state: update ui needs to be after load
+          //and save needs to be last
+          _gameState.loadFromData(data);
           int newIndex = int.parse(indexString);
           //overwrite states if needed
           _gameState.commandIndex.value = newIndex;
-
-          _gameState.loadFromData(data);
           _gameState.updateAllUI();
+          _gameState.save();
+
         } else if (message.startsWith("Error")) {
           throw (message);
         } else if (message.startsWith("ping")) {

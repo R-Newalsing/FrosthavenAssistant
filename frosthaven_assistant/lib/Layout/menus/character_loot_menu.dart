@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
+
 import '../../services/service_locator.dart';
 
 class CharacterLootMenu extends StatefulWidget {
-  const CharacterLootMenu({Key? key}) : super(key: key);
+  const CharacterLootMenu({super.key});
 
   @override
   CharacterLootMenuState createState() => CharacterLootMenuState();
@@ -115,8 +116,7 @@ class CharacterLootMenuState extends State<CharacterLootMenu> {
 
   @override
   Widget build(BuildContext context) {
-    final ScrollController scrollController =
-        ScrollController();
+    final ScrollController scrollController = ScrollController();
 
     List<Character> characters = GameMethods.getCurrentCharacters();
 

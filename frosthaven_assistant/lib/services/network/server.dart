@@ -1,21 +1,21 @@
+import 'dart:async';
+import 'dart:convert' show utf8;
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
-import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant/Resource/settings.dart';
-import '../service_locator.dart';
+import 'package:frosthaven_assistant/Resource/state/game_state.dart';
+import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
 
+import '../service_locator.dart';
 import 'communication.dart';
 import 'connection.dart';
 import 'network.dart';
-import 'dart:convert' show utf8;
 
 class Server {
-  final int serverVersion = 184;
+  final int serverVersion = 190;
 
   final GameState _gameState = getIt<GameState>();
   final _communication = getIt<Communication>();
@@ -93,7 +93,11 @@ class Server {
       } else {
         getIt<Network>().networkMessage.value = 'Server Offline';
       }
-      _serverSocket!.close().catchError((error) => log(error.toString()));
+
+      _serverSocket!.close().catchError((error) {
+        log(error.toString());
+        return error;
+      });
 
       _connection.removeAll();
     }
@@ -160,14 +164,12 @@ class Server {
                         .insert(_gameState.commandIndex.value, description);
                   }
                   _gameState.loadFromData(data);
+                  _gameState.save();
                   _gameState.updateAllUI();
                   sendToOthers(
                       "Index:${_gameState.commandIndex.value}Description:${_gameState.commandDescriptions.last}GameState:${_gameState.gameSaveStates.last!.getState()}",
                       client);
-                  //getIt<GameState>().modifierDeck.
-                  //client.write('your gameState changes received by server');
                 } else {
-                  //getIt<Network>().networkMessage.value = "index mismatch: ignoring incoming message";
                   log('Got same or lower index. ignoring: received index: $newIndex current index ${_gameState.commandIndex.value}');
 
                   //overwrite client state with current server state.
@@ -228,7 +230,7 @@ class Server {
 
         // handle errors
         onError: (error) {
-          log(error);
+          log(error.toString());
           getIt<Network>().networkMessage.value = error.toString();
           /*stopServer(error.toString());
           for (int i = 0; i < _clients.length; i++) {

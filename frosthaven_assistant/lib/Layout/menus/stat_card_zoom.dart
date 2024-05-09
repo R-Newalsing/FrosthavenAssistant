@@ -5,7 +5,7 @@ import 'package:frosthaven_assistant/Resource/scaling.dart';
 import '../../Resource/state/game_state.dart';
 
 class StatCardZoom extends StatefulWidget {
-  const StatCardZoom({Key? key, required this.monster}) : super(key: key);
+  const StatCardZoom({super.key, required this.monster});
 
   final Monster monster;
 
@@ -46,7 +46,7 @@ class StatCardZoomState extends State<StatCardZoom> {
       child: SizedBox(
           width: cardWidth * scale * zoomValue,
           height: cardHeight * scale * zoomValue,
-          child: MonsterStatCardWidgetState.buildCard(widget.monster, scaling)),
+          child: MonsterStatCardWidget.buildCard(widget.monster, scaling)),
     );
   }
 }

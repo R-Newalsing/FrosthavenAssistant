@@ -37,16 +37,23 @@ void main() {
     setWindowMaxSize(Size.infinite);
   }
 
-  if (kReleaseMode) {
+  //if (kReleaseMode) {
     ErrorWidget.builder = ((e) {
-      //to not show the gray boxes, when there are exceptions
-      return Container();
+      if(!kDebugMode) {
+        //to not show the gray boxes, when there are exceptions
+        return Container();
+      }
+      //show the error in debug builds
+      return ErrorWidget(e);
     });
-  }
+  //}
+
 
   runApp(ThemeSwitcherWidget(initialTheme: theme, child: const MyApp()));
 
 }
+
+final loading = ValueNotifier<bool>(true);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -62,11 +69,16 @@ class MyApp extends StatelessWidget {
       //should force app to be in foreground and disable screen lock
     }
 
-    //initialize game
-    getIt<GameState>().init();
-    getIt<GameData>().loadData("assets/data/")
-        .then((value) => getIt<GameState>().load());
-    getIt<Settings>().init();
+    try {
+      //initialize game
+      getIt<GameState>().init();
+      getIt<GameData>().loadData("assets/data/")
+          .then((value) => getIt<GameState>().load()).then((value) =>
+          getIt<Settings>().init()).then((value) => loading.value = false);
+    } catch (error) {
+
+      loading.value = false;
+    }
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

@@ -1,47 +1,45 @@
 library game_state;
 
-import '../card_stack.dart';
-import '../game_data.dart';
-import '../enums.dart';
-
-import 'package:built_collection/built_collection.dart';
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:ffi';
+import 'dart:math';
 
+import 'package:built_collection/built_collection.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:frosthaven_assistant/Resource/settings.dart';
+import 'package:frosthaven_assistant/Resource/stat_calculator.dart';
+import 'package:frosthaven_assistant/Resource/ui_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Layout/main_list.dart';
-import '../../Model/room.dart';
-import '../../Model/scenario.dart';
-import '../action_handler.dart';
-import '../../Model/bluetooth_standee.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../Model/MonsterAbility.dart';
-import '../../services/service_locator.dart';
-
-import 'dart:math';
-import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
-import 'package:frosthaven_assistant/Resource/stat_calculator.dart';
-import 'package:frosthaven_assistant/Resource/settings.dart';
-import 'package:frosthaven_assistant/Resource/ui_utils.dart';
 import '../../Layout/menus/auto_add_standee_menu.dart';
+import '../../Model/MonsterAbility.dart';
 import '../../Model/character_class.dart';
 import '../../Model/monster.dart';
+import '../../Model/room.dart';
+import '../../Model/scenario.dart';
+import '../../Model/bluetooth_standee.dart';
+import '../../services/service_locator.dart';
+import '../action_handler.dart';
+import '../card_stack.dart';
 import '../commands/add_standee_command.dart';
+import '../enums.dart';
+import '../game_data.dart';
 
-part "game_save_state.dart";
+part "../game_methods.dart";
 part "character.dart";
 part "character_state.dart";
 part "figure_state.dart";
+part "game_save_state.dart";
+part "list_item_data.dart";
 part "loot_deck_state.dart";
 part "modifier_deck_state.dart";
 part "monster.dart";
 part "monster_ability_state.dart";
 part "monster_instance.dart";
-part "list_item_data.dart";
-part "../game_methods.dart";
 
 // ignore_for_file: library_private_types_in_public_api
 
@@ -59,7 +57,7 @@ class _StateModifier {}
 class GameState extends ActionHandler {
   //TODO: put action handler in own place
 
-  GameState() {}
+  GameState();
 
   void init() {
     _elementState[Elements.fire] = ElementState.inert;
@@ -70,7 +68,7 @@ class GameState extends ActionHandler {
     _elementState[Elements.dark] = ElementState.inert;
   }
 
-  //todo: ugly hacks to delay list update (doesn't need to be here though)
+  //todo: ugly hacks to delay list update (doesn't need to be here)
   final updateList = ValueNotifier<int>(0);
   final killMonsterStandee = ValueNotifier<int>(-1);
   final updateForUndo = ValueNotifier<int>(0);
@@ -84,9 +82,8 @@ class GameState extends ActionHandler {
 
   ValueListenable<int> get round => _round;
   final _round = ValueNotifier<int>(1);
-  setRound(_StateModifier stateModifier, int value) {
-    _round.value = value;
-  }
+  ValueListenable<int> get totalRounds => _totalRounds;
+  final _totalRounds = ValueNotifier<int>(1);
 
   ValueListenable<RoundState> get roundState => _roundState;
   final _roundState = ValueNotifier<RoundState>(RoundState.chooseInitiative);
@@ -106,6 +103,18 @@ class GameState extends ActionHandler {
     _solo.value = value;
   }
 
+  ValueListenable<bool> get autoScenarioLevel => _autoScenarioLevel;
+  final _autoScenarioLevel = ValueNotifier<bool>(false);
+  setAutoScenarioLevel(_StateModifier stateModifier, bool value) {
+    _autoScenarioLevel.value = value;
+  }
+
+  ValueListenable<int> get difficulty => _difficulty;
+  final _difficulty = ValueNotifier<int>(1);
+  setDifficulty(_StateModifier stateModifier, int value) {
+    _difficulty.value = value;
+  }
+
   ValueListenable<String> get scenario => _scenario;
   final _scenario = ValueNotifier<String>("");
   setScenario(_StateModifier stateModifier, String value) {
@@ -118,8 +127,7 @@ class GameState extends ActionHandler {
 
   BuiltList<SpecialRule> get scenarioSpecialRules =>
       BuiltList.of(_scenarioSpecialRules);
-  List<SpecialRule> _scenarioSpecialRules =
-      []; //has both monsters and characters
+  List<SpecialRule> _scenarioSpecialRules = [];
 
   LootDeck get lootDeck => _lootDeck; //todo: still mutable
   late LootDeck _lootDeck = LootDeck.empty(); //loot deck for current scenario
@@ -166,8 +174,11 @@ class GameState extends ActionHandler {
     return '{'
         '"level": ${_level.value}, '
         '"solo": ${_solo.value}, '
+        '"autoScenarioLevel": ${_autoScenarioLevel.value}, '
+        '"difficulty": ${_difficulty.value}, '
         '"roundState": ${_roundState.value.index}, '
         '"round": ${_round.value}, '
+        '"totalRounds": ${_totalRounds.value}, '
         '"scenario": "${_scenario.value}", '
         '"toastMessage": ${jsonEncode(_toastMessage.value)}, '
         '"scenarioSpecialRules": ${_scenarioSpecialRules.toString()}, '
@@ -184,25 +195,22 @@ class GameState extends ActionHandler {
         '}';
   }
 
-  Future<void> save() async {
+  void save() {
     GameSaveState state = GameSaveState();
-    state.save();
-    state.saveToDisk();
+    state.saveToDisk(this);
     gameSaveStates.add(state); //do this from action handler instead
   }
 
   Future<void> load() async {
     GameSaveState state = GameSaveState();
-    state.loadFromDisk();
+    state.loadFromDisk(this);
     gameSaveStates.add(
         state); //init state: means game save state is one larger than command list
   }
 
-  Future<void> loadFromData(String data) async {
+  loadFromData(String data) {
     GameSaveState state = GameSaveState();
-    state.loadFromData(data);
-    gameSaveStates.add(state);
-    state.saveToDisk();
+    state.loadFromData(data, this);
   }
 
   /// ****************************************************

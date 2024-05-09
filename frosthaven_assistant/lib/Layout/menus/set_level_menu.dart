@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:frosthaven_assistant/Layout/counter_button.dart';
 import 'package:frosthaven_assistant/Resource/commands/change_stat_commands/change_max_health_command.dart';
+import 'package:frosthaven_assistant/Resource/commands/set_auto_level_adjust_command.dart';
+import 'package:frosthaven_assistant/Resource/commands/set_difficulty_command.dart';
 import 'package:frosthaven_assistant/Resource/commands/set_solo_command.dart';
+
 import '../../Resource/commands/set_level_command.dart';
-import '../../Resource/state/game_state.dart';
 import '../../Resource/settings.dart';
+import '../../Resource/state/game_state.dart';
 import '../../Resource/ui_utils.dart';
 import '../../services/service_locator.dart';
 
 class SetLevelMenu extends StatefulWidget {
-  const SetLevelMenu({Key? key, this.monster, this.figure, this.characterId})
-      : super(key: key);
+  const SetLevelMenu({super.key, this.monster, this.figure, this.characterId});
 
   final Monster? monster;
   final String? characterId;
@@ -33,6 +35,11 @@ class SetLevelMenuState extends State<SetLevelMenu> {
     return ValueListenableBuilder<bool>(
         valueListenable: _gameState.solo,
         builder: (context, value, child) {
+
+          return ValueListenableBuilder<int>(
+              valueListenable: _gameState.level,
+              builder: (context, value, child) {
+
           bool isCurrentlySelected;
           if (widget.monster != null) {
             isCurrentlySelected = nr == widget.monster!.level.value;
@@ -57,8 +64,7 @@ class SetLevelMenuState extends State<SetLevelMenu> {
                     border: Border.all(
                       color: color,
                     ),
-                    borderRadius:
-                        BorderRadius.all(Radius.circular(30 * scale))),
+                    borderRadius: BorderRadius.all(Radius.circular(30 * scale))),
                 child: TextButton(
                   child: Text(
                     text,
@@ -96,6 +102,7 @@ class SetLevelMenuState extends State<SetLevelMenu> {
                 )),
           );
         });
+        });
   }
 
   Widget createLegend(String name, String gfx, String value, double scale) {
@@ -107,12 +114,9 @@ class SetLevelMenuState extends State<SetLevelMenu> {
     var textStyleLevelWidget = TextStyle(
         color: Colors.white,
         overflow: TextOverflow.fade,
-        //fontWeight: FontWeight.bold,
-        //backgroundColor: Colors.transparent.withAlpha(100),
         fontSize: 18 * scale,
         shadows: [
           shadow
-          //Shadow(offset: Offset(1, 1),blurRadius: 2, color: Colors.black)
         ]);
     double height = 20 * scale;
     if (gfx.contains("level")) {
@@ -132,7 +136,6 @@ class SetLevelMenuState extends State<SetLevelMenu> {
                   color: Colors.black.withOpacity(0.3),
                   spreadRadius: 1,
                   blurRadius: 3.0,
-                  //offset: Offset(1* settings.userScalingBars.value, 1* settings.userScalingBars.value), // changes position of shadow
                 ),
               ],
             ),
@@ -143,11 +146,69 @@ class SetLevelMenuState extends State<SetLevelMenu> {
     );
   }
 
+  Widget buildDifficultyButton(int nr, double scale) {
+    return ValueListenableBuilder<int>(
+        valueListenable: _gameState.difficulty,
+        builder: (context, value, child) {
+          bool isCurrentlySelected = nr == _gameState.difficulty.value;
+          Color color = Colors.transparent;
+          String text = nr.toString();
+          if(nr > 0) {
+            text = "+$text";
+          }
+          bool darkMode = getIt<Settings>().darkMode.value;
+          return SizedBox(
+            width: 40 * scale,
+            height: 40 * scale,
+            child: Container(
+                decoration: BoxDecoration(
+                    border: Border.all(
+                      color: color,
+                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(30 * scale))),
+                child: TextButton(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                        fontSize: 18 * scale,
+                        shadows: [
+                          Shadow(
+                              offset: Offset(1 * scale, 1 * scale),
+                              color: isCurrentlySelected
+                                  ? darkMode
+                                  ? Colors.black
+                                  : Colors.grey
+                                  : darkMode
+                                  ? Colors.black
+                                  : Colors.black)
+                        ],
+                        color: isCurrentlySelected
+                            ? darkMode
+                            ? Colors.white
+                            : Colors.black
+                            : darkMode
+                            ? Colors.grey
+                            : Colors.grey),
+                  ),
+                  onPressed: () {
+                    if (!isCurrentlySelected) {
+                      _gameState.action(SetDifficultyCommand(nr));
+                    }
+                  },
+                )),
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     String title = "Set Scenario Level";
     if (widget.monster != null) {
-      title = "Set ${widget.monster!.type.display}'s level";
+      String name = widget.monster!.type.display;
+      if(widget.monster!.type.display.endsWith("y")) {
+        name = "${name.substring(0, name.length-1)}ie";
+      }
+      title = "Set $name's level";
     }
     //if summon:
     bool isSummon = widget.monster == null && widget.figure is MonsterInstance;
@@ -188,27 +249,17 @@ class SetLevelMenuState extends State<SetLevelMenu> {
     }
 
     return Container(
-        width: 230 * scale,
-        height: showLegend ? 300 * scale : 187 * scale,
+        width: 270 * scale,
+        height: showLegend ? 400 * scale : 287 * scale,
         decoration: BoxDecoration(
-          //color: Colors.black,
-          //borderRadius: BorderRadius.all(Radius.circular(8)),
-
-          /*border: Border.fromBorderSide(BorderSide(
-            color: Colors.blueGrey,
-            width: 10
-          )),*/
           image: DecorationImage(
-            colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.8), BlendMode.dstATop),
-            image: AssetImage(darkMode
-                ? 'assets/images/bg/dark_bg.png'
-                : 'assets/images/bg/white_bg.png'),
+            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.8), BlendMode.dstATop),
+            image: AssetImage(
+                darkMode ? 'assets/images/bg/dark_bg.png' : 'assets/images/bg/white_bg.png'),
             fit: BoxFit.cover,
           ),
         ),
         child: Stack(
-            //alignment: Alignment.center,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -237,70 +288,80 @@ class SetLevelMenuState extends State<SetLevelMenu> {
                         buildLevelButton(7, scale),
                       ],
                     ),
-                  widget.figure == null
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                              Text("Solo:", style: getSmallTextStyle(scale)),
-                              ValueListenableBuilder<bool>(
-                                  valueListenable: _gameState.solo,
-                                  builder: (context, value, child) {
-                                    return Checkbox(
-                                      checkColor: Colors.black,
-                                      activeColor: Colors.grey.shade200,
-                                      side: BorderSide(
-                                          color: darkMode
-                                              ? Colors.white
-                                              : Colors.black),
-                                      onChanged: (bool? newValue) {
-                                        _gameState.action(SetSoloCommand(newValue!));
-                                      },
-                                      value: _gameState.solo.value,
-                                    );
-                                  })
-                            ])
-                      : Container(),
-                  widget.figure != null
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                              CounterButton(
-                                  widget.figure!.maxHealth,
-                                  ChangeMaxHealthCommand(0, figureId, ownerId),
-                                  900,
-                                  "assets/images/abilities/heal.png",
-                                  true,
-                                  Colors.red,
-                                  figureId: figureId,
-                                  ownerId: ownerId,
-                                  scale: scale)
-                            ])
-                      : Container(),
+                  if(widget.figure == null)
+                       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          Text("Solo:", style: getSmallTextStyle(scale)),
+                          ValueListenableBuilder<bool>(
+                              valueListenable: _gameState.solo,
+                              builder: (context, value, child) {
+                                return Checkbox(
+                                  checkColor: Colors.black,
+                                  activeColor: Colors.grey.shade200,
+                                  side: BorderSide(color: darkMode ? Colors.white : Colors.black),
+                                  onChanged: (bool? newValue) {
+                                    _gameState.action(SetSoloCommand(newValue!));
+                                  },
+                                  value: _gameState.solo.value,
+                                );
+                              })
+                        ]),
+
+                  if(widget.figure == null)
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Text("Automatic Scenario Level:", style: getSmallTextStyle(scale)),
+                      ValueListenableBuilder<bool>(
+                          valueListenable: _gameState.autoScenarioLevel,
+                          builder: (context, value, child) {
+                            return Checkbox(
+                              checkColor: Colors.black,
+                              activeColor: Colors.grey.shade200,
+                              side: BorderSide(color: darkMode ? Colors.white : Colors.black),
+                              onChanged: (bool? newValue) {
+                                _gameState.action(SetAutoLevelAdjustCommand(newValue!));
+                              },
+                              value: _gameState.autoScenarioLevel.value,
+                            );
+                          })
+                    ]),
+
+                  if(widget.figure == null)
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Text("Difficulty:", style: getSmallTextStyle(scale)),
+
+                        buildDifficultyButton(-1, scale),
+                      buildDifficultyButton(0, scale),
+                      buildDifficultyButton(1, scale),
+                      buildDifficultyButton(2, scale),
+                      buildDifficultyButton(3, scale),
+
+                    ]),
+
+                  if(widget.figure != null)
+                       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          CounterButton(
+                              widget.figure!.maxHealth,
+                              ChangeMaxHealthCommand(0, figureId, ownerId),
+                              900,
+                              "assets/images/abilities/heal.png",
+                              true,
+                              Colors.red,
+                              figureId: figureId,
+                              ownerId: ownerId,
+                              scale: scale)
+                        ]),
                   if (showLegend == true)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        createLegend(
-                            "trap damage",
-                            "assets/images/psd/traps-fh.png",
-                            ": ${GameMethods.getTrapValue()}",
-                            scale),
-                        createLegend(
-                            "hazardous terrain damage",
-                            "assets/images/psd/hazard-fh.png",
-                            ": ${GameMethods.getHazardValue()}",
-                            scale),
-                        createLegend(
-                            "experience added",
-                            "assets/images/psd/xp.png",
-                            ": +${GameMethods.getXPValue()}",
-                            scale),
-                        createLegend(
-                            "gold coin value",
-                            "assets/images/psd/coins-fh.png",
-                            ": x${GameMethods.getCoinValue()}",
-                            scale),
+                        createLegend("trap damage", "assets/images/psd/traps-fh.png",
+                            ": ${GameMethods.getTrapValue()}", scale),
+                        createLegend("hazardous terrain damage", "assets/images/psd/hazard-fh.png",
+                            ": ${GameMethods.getHazardValue()}", scale),
+                        createLegend("experience added", "assets/images/psd/xp.png",
+                            ": +${GameMethods.getXPValue()}", scale),
+                        createLegend("gold coin value", "assets/images/psd/coins-fh.png",
+                            ": x${GameMethods.getCoinValue()}", scale),
                         createLegend("level", "assets/images/psd/level.png",
                             ": ${_gameState.level.value}", scale),
                       ],

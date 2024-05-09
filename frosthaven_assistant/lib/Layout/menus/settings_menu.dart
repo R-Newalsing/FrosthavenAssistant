@@ -2,18 +2,21 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:frosthaven_assistant/Layout/menus/save_menu.dart';
 import 'package:frosthaven_assistant/Resource/commands/clear_unlocked_classes_command.dart';
 import 'package:frosthaven_assistant/Resource/commands/track_standees_command.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+
 import '../../Resource/scaling.dart';
 import '../../Resource/settings.dart';
+import '../../Resource/ui_utils.dart';
 import '../../services/network/client.dart';
 import '../../services/network/network.dart';
 import '../../services/service_locator.dart';
 
 class SettingsMenu extends StatefulWidget {
-  const SettingsMenu({Key? key}) : super(key: key);
+  const SettingsMenu({super.key});
 
   @override
   SettingsMenuState createState() => SettingsMenuState();
@@ -33,6 +36,14 @@ class SettingsMenuState extends State<SettingsMenu> {
   final TextEditingController _portTextController = TextEditingController();
 
   final ScrollController scrollController = ScrollController();
+
+  List<DropdownMenuItem<String>> getIPList() {
+    List<DropdownMenuItem<String>> retVal = [];
+    for (var item in getIt<Network>().networkInfo.wifiIPv4List) {
+      retVal.add(DropdownMenuItem<String>(value: item, child: Text(item)));
+    }
+    return retVal;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -455,12 +466,21 @@ class SettingsMenuState extends State<SettingsMenu> {
                                       getIt<Network>().networkInfo.wifiIPv4,
                                   builder: (context, value, child) {
                                     return SizedBox(
-                                        width: 200,
-                                        height: 20,
-                                        child: Text(getIt<Network>()
-                                            .networkInfo
-                                            .wifiIPv4
-                                            .value));
+                                      width: 200,
+                                      height: 20,
+                                      child: DropdownButtonHideUnderline(
+                                          child: DropdownButton(
+                                              value: getIt<Network>()
+                                                  .networkInfo
+                                                  .wifiIPv4
+                                                  .value,
+                                              items: getIPList(),
+                                              onChanged: (value) =>
+                                                  getIt<Network>()
+                                                      .networkInfo
+                                                      .wifiIPv4
+                                                      .value = value!)),
+                                    );
                                   }),
                               ValueListenableBuilder<String>(
                                   valueListenable:
@@ -487,7 +507,12 @@ class SettingsMenuState extends State<SettingsMenu> {
                                   ),
                                   maxLength: 6,
                                 ),
-                              )
+                              ),
+                              ListTile(
+                                  title: const Text("Load/Save State"),
+                                  onTap: () {
+                                    openDialog(context, const SaveMenu());
+                                  }),
                               //checkbox client + host + port
                               //checkbox server - show ip, port
                             ],

@@ -18,16 +18,15 @@ import '../../Resource/commands/ice_wraith_change_form_command.dart';
 import '../../Resource/commands/remove_condition_command.dart';
 import '../../Resource/commands/set_as_summon_command.dart';
 import '../../Resource/enums.dart';
-import '../../Resource/state/game_state.dart';
 import '../../Resource/settings.dart';
+import '../../Resource/state/game_state.dart';
 import '../../Resource/ui_utils.dart';
 import '../../services/service_locator.dart';
 import '../counter_button.dart';
 
 class StatusMenu extends StatefulWidget {
   const StatusMenu(
-      {Key? key, required this.figureId, this.characterId, this.monsterId})
-      : super(key: key);
+      {super.key, required this.figureId, this.characterId, this.monsterId});
 
   final String figureId;
   final String? monsterId;
@@ -264,7 +263,10 @@ class StatusMenuState extends State<StatusMenu> {
           Color color = Colors.transparent;
           FigureState? figure = GameMethods.getFigure(ownerId, figureId);
           if (figure == null) {
-            return Container();
+            return const SizedBox(
+              width: 0,
+              height: 0,
+            );
           }
           ListItemData? owner;
           for (var item in _gameState.currentList) {
@@ -405,7 +407,13 @@ class StatusMenuState extends State<StatusMenu> {
     String figureId = widget.figureId;
     FigureState? figure = GameMethods.getFigure(ownerId, figureId);
     if (figure == null) {
-      return Container();
+      //close menu here, since nothing will be valid
+      Navigator.pop(context);
+
+      return const SizedBox(
+        height: 0,
+        width: 0,
+      );
     }
 
     List<String> immunities = [];
@@ -491,6 +499,12 @@ class StatusMenuState extends State<StatusMenu> {
                       ValueListenableBuilder<int>(
                           valueListenable: getIt<GameState>().updateList,
                           builder: (context, value, child) {
+                            //handle case when health is changed to zero: don't instantiate monster box
+                            if (GameMethods.getFigure(ownerId, figureId) ==
+                                null) {
+                              //todo: should somehow pop context in case dead by health wheel
+                              return Container();
+                            }
                             return Container(
                                 height: 28 * scale,
                                 margin: EdgeInsets.only(top: 2 * scale),

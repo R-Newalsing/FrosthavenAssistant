@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../Resource/commands/imbue_element_command.dart';
 import '../Resource/commands/use_element_command.dart';
 import '../Resource/enums.dart';
-import '../Resource/state/game_state.dart';
 import '../Resource/settings.dart';
+import '../Resource/state/game_state.dart';
 import '../services/service_locator.dart';
 
 class ElementButton extends StatefulWidget {
@@ -15,11 +15,10 @@ class ElementButton extends StatefulWidget {
   final double borderWidth = 2;
 
   const ElementButton(
-      {Key? key,
+      {super.key,
       required this.icon,
       required this.color,
-      required this.element})
-      : super(key: key);
+      required this.element});
 
   @override
   AnimatedContainerButtonState createState() => AnimatedContainerButtonState();
@@ -102,25 +101,23 @@ class AnimatedContainerButtonState extends State<ElementButton> {
         child: InkWell(
             hoverColor: Colors.transparent,
             splashColor: Colors.transparent,
-            focusColor: Colors.transparent,
+            focusColor: const Color(0x44000000),
             highlightColor: Colors.transparent,
             onLongPress: () {
               setState(() {
                 _gameState.action(ImbueElementCommand(widget.element, true));
               });
             },
-            onTapDown: (TapDownDetails details) {
-              setState(() {
-                if (_gameState.elementState[widget.element] ==
-                    ElementState.half) {
-                  _gameState.action(UseElementCommand(widget.element));
-                } else if (_gameState.elementState[widget.element] ==
-                    ElementState.full) {
-                  _gameState.action(UseElementCommand(widget.element));
-                } else {
-                  _gameState.action(ImbueElementCommand(widget.element, false));
-                }
-              });
+            onTap: () {
+              if (_gameState.elementState[widget.element] ==
+                  ElementState.half) {
+                _gameState.action(UseElementCommand(widget.element));
+              } else if (_gameState.elementState[widget.element] ==
+                  ElementState.full) {
+                _gameState.action(UseElementCommand(widget.element));
+              } else {
+                _gameState.action(ImbueElementCommand(widget.element, false));
+              }
             },
             child: Stack(
               alignment: Alignment.center,

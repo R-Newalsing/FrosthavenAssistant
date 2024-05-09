@@ -16,13 +16,12 @@ class SelectHealthWheel extends StatefulWidget {
   final ValueNotifier<int> time;
 
   const SelectHealthWheel(
-      {Key? key,
+      {super.key,
       required this.data,
       required this.figureId,
       required this.ownerId,
       required this.delta,
-      required this.time})
-      : super(key: key);
+      required this.time});
 
   @override
   SelectHealthWheelState createState() => SelectHealthWheelState();
@@ -33,9 +32,7 @@ class SelectHealthWheelState extends State<SelectHealthWheel> {
   late final FixedExtentScrollController scrollController;
   double currentScrollOffset = 0;
   late int itemIndex;
-
   final double itemExtent = 25;
-
   bool scrollInited = false;
 
   @override
@@ -55,11 +52,13 @@ class SelectHealthWheelState extends State<SelectHealthWheel> {
   void end() {
     int value = selected - widget.data.health.value;
     if (value != 0) {
-      getIt<GameState>()
-          .action(ChangeHealthCommand(value, widget.figureId, widget.ownerId));
+      //in case figure killed by other device double check
+      if (GameMethods.getFigure(widget.ownerId, widget.figureId) != null) {
+        getIt<GameState>().action(ChangeHealthCommand(value, widget.figureId, widget.ownerId));
+      }
+      selected =
+          widget.data.maxHealth.value - (widget.data.maxHealth.value - widget.data.health.value);
     }
-    selected = widget.data.maxHealth.value -
-        (widget.data.maxHealth.value - widget.data.health.value);
   }
 
   void scrollTheWheel(double delta, int timeMicroSeconds, double scale) {
@@ -80,8 +79,7 @@ class SelectHealthWheelState extends State<SelectHealthWheel> {
     if (scrollController.hasClients) {
       if (timeMicroSeconds > 0) {
         scrollController.animateTo(currentScrollOffset - deltaMod,
-            duration: Duration(microseconds: timeMicroSeconds),
-            curve: Curves.linear);
+            duration: Duration(microseconds: timeMicroSeconds), curve: Curves.linear);
         currentScrollOffset = currentScrollOffset - deltaMod;
         //don't go over limit/don't account for extra drag at end of range
         if (currentScrollOffset > itemExtent * scale * maxHealth) {
@@ -132,8 +130,8 @@ class SelectHealthWheelState extends State<SelectHealthWheel> {
                   scrollTheWheel(widget.delta.value, widget.time.value, scale);
 
                   return ListWheelScrollView(
-                      physics:
-                          const NeverScrollableScrollPhysics(), //force android scrolling...
+                      physics: const NeverScrollableScrollPhysics(),
+                      //force android scrolling...
                       renderChildrenOutsideViewport: true,
                       clipBehavior: Clip.none,
                       onSelectedItemChanged: (x) {
@@ -157,12 +155,8 @@ class SelectHealthWheelState extends State<SelectHealthWheel> {
                                   maxLines: 1,
                                   style: TextStyle(
                                       height: 1,
-                                      color: x == selected
-                                          ? Colors.red
-                                          : Colors.white,
-                                      fontSize: x == selected
-                                          ? 18 * scale
-                                          : 16 * scale,
+                                      color: x == selected ? Colors.red : Colors.white,
+                                      fontSize: x == selected ? 18 * scale : 16 * scale,
                                       shadows: [shadow]),
                                 ))),
                       ));
