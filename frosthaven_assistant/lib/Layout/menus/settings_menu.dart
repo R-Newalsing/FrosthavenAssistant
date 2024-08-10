@@ -25,17 +25,22 @@ class SettingsMenu extends StatefulWidget {
 final networkInfo = NetworkInfo();
 
 class SettingsMenuState extends State<SettingsMenu> {
-  @override
-  initState() {
-    // at the beginning, all items are shown
-    super.initState();
-    getIt<Network>().networkInfo.initNetworkInfo();
-  }
-
   final TextEditingController _serverTextController = TextEditingController();
   final TextEditingController _portTextController = TextEditingController();
 
   final ScrollController scrollController = ScrollController();
+
+  late Settings settings;
+
+  @override
+  initState() {
+    // at the beginning, all items are shown
+    super.initState();
+    settings = getIt<Settings>();
+    getIt<Network>().networkInfo.initNetworkInfo();
+    _serverTextController.text = settings.lastKnownConnection;
+    _portTextController.text = settings.lastKnownPort;
+  }
 
   List<DropdownMenuItem<String>> getIPList() {
     List<DropdownMenuItem<String>> retVal = [];
@@ -47,13 +52,9 @@ class SettingsMenuState extends State<SettingsMenu> {
 
   @override
   Widget build(BuildContext context) {
-    Settings settings = getIt<Settings>();
-
     double screenWidth = MediaQuery.of(context).size.width;
     double referenceMinBarWidth = 40 * 6.5;
     double maxBarScale = screenWidth / referenceMinBarWidth;
-    _serverTextController.text = settings.lastKnownConnection;
-    _portTextController.text = settings.lastKnownPort;
 
     return Card(
         child: Scrollbar(

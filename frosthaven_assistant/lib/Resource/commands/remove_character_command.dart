@@ -10,11 +10,15 @@ class RemoveCharacterCommand extends Command {
   @override
   void execute() {
     GameMethods.removeCharacters(stateAccess, names);
+
+    if (names.length != 1 ||
+        !GameMethods.isObjectiveOrEscort(names.first.characterClass)) {
+      GameMethods.applyDifficulty(stateAccess);
+    }
   }
 
   @override
   void undo() {
-    //_gameState.currentList.add(_character);
     _gameState.updateList.value++;
   }
 

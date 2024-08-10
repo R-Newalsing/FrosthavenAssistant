@@ -39,8 +39,7 @@ class GameMethods {
     double nrOfCharacters = 0;
     for (var item in _gameState.currentList) {
       if (item is Character &&
-          item.characterClass.name != "Escort" &&
-          item.characterClass.name != "Objective") {
+          !GameMethods.isObjectiveOrEscort(item.characterClass)) {
         totalLevels += item.characterState.level.value;
         nrOfCharacters++;
       }
@@ -347,8 +346,7 @@ class GameMethods {
     List<Character> characters = [];
     for (ListItemData data in _gameState.currentList) {
       if (data is Character &&
-          data.characterClass.name != "Escort" &&
-          data.characterClass.name != "Objective") {
+          !GameMethods.isObjectiveOrEscort(data.characterClass)) {
         characters.add(data);
       }
     }
@@ -359,8 +357,7 @@ class GameMethods {
     int res = 0;
     for (ListItemData data in _gameState.currentList) {
       if (data is Character) {
-        if (data.characterClass.name != "Escort" &&
-            data.characterClass.name != "Objective") {
+        if (!GameMethods.isObjectiveOrEscort(data.characterClass)) {
           res++;
         }
       }
@@ -448,11 +445,11 @@ class GameMethods {
       _gameState.showAllyDeck.value = false;
       _gameState._currentAbilityDecks.clear();
       _gameState._scenarioSpecialRules.clear();
+      GameMethods.applyDifficulty(_);
       List<ListItemData> newList = [];
       for (var item in _gameState.currentList) {
         if (item is Character) {
-          if (item.characterClass.name != "Objective" &&
-              item.characterClass.name != "Escort") {
+          if (!GameMethods.isObjectiveOrEscort(item.characterClass)) {
             item.characterState._initiative.value = 0;
             item.characterState._health.value = item.characterClass
                 .healthByLevel[item.characterState.level.value - 1];
@@ -1231,31 +1228,36 @@ class GameMethods {
     return "";
   }
 
+  static bool isObjectiveOrEscort(CharacterClass character) {
+    return character.id == "Escort" || character.id == "Objective";
+  }
+
   static Character? createCharacter(
-      _StateModifier _, String name, String? display, int level) {
+      _StateModifier _, String id, String? display, int level) {
     Character? character;
     List<CharacterClass> characters = [];
     for (String key in _gameData.modelData.value.keys) {
       characters.addAll(_gameData.modelData.value[key]!.characters);
     }
     for (CharacterClass characterClass in characters) {
-      if (characterClass.name == name) {
+      if (characterClass.id == id) {
         var characterState = CharacterState();
         characterState._level.value = level;
 
-        if (name == "Escort" || name == "Objective") {
+        if (GameMethods.isObjectiveOrEscort(characterClass)) {
           characterState._initiative.value = 99;
         }
         characterState._health.value = characterClass.healthByLevel[level - 1];
         characterState._maxHealth.value = characterState.health.value;
 
-        characterState._display.value = name;
         if (display != null) {
           characterState._display.value = display;
+        } else {
+          characterState._display.value = characterClass.name;
         }
         character = Character(characterState, characterClass);
 
-        if (name == "Beast Tyrant") {
+        if (characterClass.id == "Beast Tyrant") {
           //create the bear summon
           final int bearHp = 8 + characterState.level.value * 2;
 
@@ -1264,7 +1266,6 @@ class GameMethods {
 
           character.characterState._summonList.add(bear);
         }
-
         break;
       }
     }
