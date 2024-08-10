@@ -155,13 +155,22 @@ class MonsterBox extends StatelessWidget {
               Container(
                 margin: EdgeInsets.only(
                     left: 3 * scale, top: 3 * scale, bottom: 2 * scale),
-                child: Image(
-                  //fit: BoxFit.contain,
-                  height: 100 * scale,
-                  width: 17 * scale,
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.medium,
-                  image: AssetImage(imagePath),
+                child: ValueListenableBuilder<int>(
+                  valueListenable: getIt<GameState>().updateBluetoothContent,
+                  builder: (context, value, child) {
+                    return Image(
+                      color:
+                          BluetoothMethods.getNumberByMonsterInstane(data) > 0
+                              ? Colors.blue
+                              : null,
+                      //fit: BoxFit.contain,
+                      height: 100 * scale,
+                      width: 17 * scale,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.medium,
+                      image: AssetImage(imagePath),
+                    );
+                  },
                 ),
               ),
               Positioned(

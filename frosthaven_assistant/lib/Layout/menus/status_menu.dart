@@ -826,7 +826,7 @@ class StatusMenuState extends State<StatusMenu> {
           Column(
             // crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Divider(),
+              // const Divider(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
