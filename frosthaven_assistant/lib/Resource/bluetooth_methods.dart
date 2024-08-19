@@ -53,6 +53,7 @@ class BluetoothMethods {
   static void deleteBluetoothStandee(BluetoothStandee standee) {
     standee.reset();
     _gameState.bluetoothStandees.remove(standee);
+    _gameState.updateBluetoothContent.value++;
   }
 
   static void showNumbers() {

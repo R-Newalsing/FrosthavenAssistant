@@ -3,19 +3,19 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:frosthaven_assistant/Model/MonsterAbility.dart';
-import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
 import 'package:frosthaven_assistant/Resource/commands/change_stat_commands/change_health_command.dart';
 import 'package:frosthaven_assistant/Resource/enums.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant/services/service_locator.dart';
 
 class BluetoothStandee {
-  final callUuid = Guid("a808d258-da4f-41be-b350-4b171a9487db");
   final serviceUuid = Guid("19b10000-e8f2-537e-4f6c-d104768a1214");
   final changeHealthUuid = Guid("6b061bdc-9bc1-4952-a96f-c6ed551b2c3e");
   final toggleConditionUuid = Guid("97bada80-d0a4-4f36-80cf-d23d2eb2f81c");
   final cardStatsUuid = Guid("af01172b-6892-4d76-a25b-147ab558a3fc");
   final initValuesUuid = Guid("f5628575-fb78-462c-b1fa-d2e5edcd6389");
+  final initConditionsUuid = Guid("03958fe6-1777-401b-a815-f50971456caa");
+  final resetUuid = Guid("a808d258-da4f-41be-b350-4b171a9487db");
 
   Monster monster;
   MonsterInstance monsterInstance;
@@ -55,17 +55,17 @@ class BluetoothStandee {
     var shield = getShield();
     var flying = monster.type.flying ? 1 : 0;
     var bonusShield = getBonusShield();
-    var data = "$maxHealth,$health,$shield,$flying,$bonusShield";
+    List<int> data = [maxHealth, health, shield, flying, bonusShield];
 
     for (var condition in monsterInstance.conditions.value) {
-      data += ",${condition.index}";
+      data.add(condition.index);
     }
 
-    getCharacteristic(initValuesUuid).write(utf8.encode(data));
+    getCharacteristic(initValuesUuid).write(data);
   }
 
   void reset() {
-    getCharacteristic(initValuesUuid).write(utf8.encode("0,0,0,0,0"));
+    getCharacteristic(resetUuid).write([0x01]);
   }
 
   int getShield() {

@@ -11,6 +11,7 @@ class Bluetooth {
   final setNumberUuid = Guid("c82c1f2f-4d7b-4cb0-b09a-3dfc7ac3b661");
 
   List<BluetoothDevice> connectedDevices = [];
+  List<DeviceIdentifier> readyDevices = [];
 
   Bluetooth() {
     _init();
@@ -92,6 +93,7 @@ class Bluetooth {
 
   void discoverServices(BluetoothDevice device) async {
     await device.discoverServices();
+    readyDevices.add(device.remoteId);
     setNumber(device);
     getIt<GameState>().updateBluetoothContent.value++;
   }
