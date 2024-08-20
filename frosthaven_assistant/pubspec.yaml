@@ -67,6 +67,7 @@ dependencies:
   frosthaven_assistant_server:
     path: ../frosthaven_assistant_server
   flutter_blue_plus: ^1.31.10
+  wakelock_web: ^0.4.0
 
 
 
