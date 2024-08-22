@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frosthaven_assistant/Resource/bluetooth_standee_transition.dart';
 import 'package:frosthaven_assistant/Resource/ui_utils.dart';
 
 import '../../Resource/commands/add_standee_command.dart';
@@ -72,7 +73,9 @@ class AddStandeeMenuState extends State<AddStandeeMenu> {
         ),
         onPressed: () {
           if (!isOut) {
-            _gameState.action(AddStandeeCommand(nr, null, widget.monster.id, type, addAsSummon));
+            BluetoothStandeeTransition.context = context;
+            _gameState.action(AddStandeeCommand(
+                nr, null, widget.monster.id, type, addAsSummon));
           }
         },
       ),
@@ -110,7 +113,8 @@ class AddStandeeMenuState extends State<AddStandeeMenu> {
             width: 10
           )),*/
           image: DecorationImage(
-            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.8), BlendMode.dstATop),
+            colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(0.8), BlendMode.dstATop),
             image: AssetImage(getIt<Settings>().darkMode.value
                 ? 'assets/images/bg/dark_bg.png'
                 : 'assets/images/bg/white_bg.png'),
@@ -132,19 +136,33 @@ class AddStandeeMenuState extends State<AddStandeeMenu> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         buildNrButton(1, scale),
-                        nrOfStandees > 1 ? buildNrButton(2, scale) : Container(),
-                        nrOfStandees > 2 ? buildNrButton(3, scale) : Container(),
-                        nrOfStandees > 3 ? buildNrButton(4, scale) : Container(),
+                        nrOfStandees > 1
+                            ? buildNrButton(2, scale)
+                            : Container(),
+                        nrOfStandees > 2
+                            ? buildNrButton(3, scale)
+                            : Container(),
+                        nrOfStandees > 3
+                            ? buildNrButton(4, scale)
+                            : Container(),
                       ],
                     ),
                     nrOfStandees > 4
                         ? Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              nrOfStandees > 4 ? buildNrButton(5, scale) : Container(),
-                              nrOfStandees > 5 ? buildNrButton(6, scale) : Container(),
-                              nrOfStandees > 6 ? buildNrButton(7, scale) : Container(),
-                              nrOfStandees > 7 ? buildNrButton(8, scale) : Container(),
+                              nrOfStandees > 4
+                                  ? buildNrButton(5, scale)
+                                  : Container(),
+                              nrOfStandees > 5
+                                  ? buildNrButton(6, scale)
+                                  : Container(),
+                              nrOfStandees > 6
+                                  ? buildNrButton(7, scale)
+                                  : Container(),
+                              nrOfStandees > 7
+                                  ? buildNrButton(8, scale)
+                                  : Container(),
                             ],
                           )
                         : Container(),
@@ -152,8 +170,12 @@ class AddStandeeMenuState extends State<AddStandeeMenu> {
                         ? Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              nrOfStandees > 8 ? buildNrButton(9, scale) : Container(),
-                              nrOfStandees > 9 ? buildNrButton(10, scale) : Container(),
+                              nrOfStandees > 8
+                                  ? buildNrButton(9, scale)
+                                  : Container(),
+                              nrOfStandees > 9
+                                  ? buildNrButton(10, scale)
+                                  : Container(),
                             ],
                           )
                         : Container(),
@@ -163,7 +185,9 @@ class AddStandeeMenuState extends State<AddStandeeMenu> {
                         checkColor: Colors.black,
                         activeColor: Colors.grey.shade200,
                         side: BorderSide(
-                            color: getIt<Settings>().darkMode.value ? Colors.white : Colors.black),
+                            color: getIt<Settings>().darkMode.value
+                                ? Colors.white
+                                : Colors.black),
                         onChanged: (bool? newValue) {
                           setState(() {
                             addAsSummon = newValue!;

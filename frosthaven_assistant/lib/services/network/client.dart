@@ -127,7 +127,6 @@ class Client {
           _gameState.commandIndex.value = newIndex;
           _gameState.updateAllUI();
           _gameState.save();
-
         } else if (message.startsWith("Error")) {
           throw (message);
         } else if (message.startsWith("ping")) {

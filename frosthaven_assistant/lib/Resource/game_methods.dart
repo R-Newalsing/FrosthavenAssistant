@@ -1015,6 +1015,10 @@ class GameMethods {
                 monster)); //need to only sort this one item to place
       }
     }
+
+    BluetoothStandeeTransition.monsterInstance = instance;
+    BluetoothStandeeTransition.monster = monster;
+    BluetoothStandeeTransition.showMenu();
   }
 
   static void addStandee(

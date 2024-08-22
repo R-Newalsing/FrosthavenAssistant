@@ -41,6 +41,7 @@ class Communication {
   void sendToAll(String data) {
     final message = _composeMessageFrom(data);
     final sockets = _connection.getAll();
+
     for (var socket in sockets) {
       socket.write(message);
     }

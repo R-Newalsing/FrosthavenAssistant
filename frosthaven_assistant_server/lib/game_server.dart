@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -12,14 +11,14 @@ class StateUpdateMessage {
 }
 
 abstract class GameServer {
-
   final int serverVersion = 191;
 
   ServerSocket? _serverSocket;
   ServerSocket? get serverSocket {
     return _serverSocket;
   }
-  set serverSocket(ServerSocket? value){
+
+  set serverSocket(ServerSocket? value) {
     _serverSocket = value;
   }
 
@@ -27,15 +26,17 @@ abstract class GameServer {
   bool get serverEnabled {
     return _serverEnabled;
   }
-  set serverEnabled(bool value){
+
+  set serverEnabled(bool value) {
     _serverEnabled = value;
   }
 
   String _leftOverMessage = "";
-  String get leftOverMessage{
+  String get leftOverMessage {
     return _leftOverMessage;
   }
-  set leftOverMessage(String value){
+
+  set leftOverMessage(String value) {
     _leftOverMessage = value;
   }
 
@@ -57,16 +58,13 @@ abstract class GameServer {
   void sendToOthers(String data, Socket client);
   void sendInitResponse(Socket client);
 
-
   StateUpdateMessage parseStateUpdateMessage(String message) {
     List<String> messageParts1 = message.split("Description:");
-    String indexString =
-        messageParts1[0].substring("Index:".length);
-    List<String> messageParts2 =
-        messageParts1[1].split("GameState:");
+    String indexString = messageParts1[0].substring("Index:".length);
+    List<String> messageParts2 = messageParts1[1].split("GameState:");
     String description = messageParts2[0];
     String data = messageParts2[1];
-    StateUpdateMessage result =  StateUpdateMessage();
+    StateUpdateMessage result = StateUpdateMessage();
     result.indexString = indexString;
     result.index = int.parse(indexString);
     result.description = description;
@@ -122,7 +120,7 @@ abstract class GameServer {
     resetState();
   }
 
-  void logHandleConnection(Socket client){
+  void logHandleConnection(Socket client) {
     String info = 'Connection from ${safeGetClientAddress(client)}';
     log(info);
     setNetworkMessage(info);
@@ -171,42 +169,45 @@ abstract class GameServer {
     }
   }
 
-  void processMessages(String socketMessages, Socket client){
+  void processMessages(String socketMessages, Socket client) {
     List<String> messages = socketMessages.split("S3nD:");
-          //handle
-          for (var message in messages) {
-            if (message.endsWith("[EOM]")) {
-              message = message.substring(0, message.length - "[EOM]".length);
-              if (message.startsWith("Index:")) {
-                handleIndexMessage(message, client);
-              } else if (message.startsWith("init")) {
-                handleInitMessage(message, client);
-              } else if (message.startsWith("undo")) {
-                handleUndoMessage();
-              } else if (message.startsWith("redo")) {
-                handleRedoMessage();
-              } else if (message.startsWith("pong")) {
-                handlePongMessage(client);
-              } else if (message.startsWith("ping")) {
-                handlePingMessage(client);
-              }
-            } else {
-              leftOverMessage = message;
-            }
-          }
+    //handle
+    for (var message in messages) {
+      if (message.endsWith("[EOM]")) {
+        message = message.substring(0, message.length - "[EOM]".length);
+        if (message.startsWith("Index:")) {
+          handleIndexMessage(message, client);
+        } else if (message.startsWith("init")) {
+          handleInitMessage(message, client);
+        } else if (message.startsWith("undo")) {
+          handleUndoMessage();
+        } else if (message.startsWith("redo")) {
+          handleRedoMessage();
+        } else if (message.startsWith("pong")) {
+          handlePongMessage(client);
+        } else if (message.startsWith("ping")) {
+          handlePingMessage(client);
+        } else if (message.startsWith("BLE")) {
+          handleBLEMessage(message);
+        }
+      } else {
+        leftOverMessage = message;
+      }
+    }
   }
 
-  void handleIndexMessage(String message, Socket client){
+  void handleIndexMessage(String message, Socket client) {
     StateUpdateMessage parsedMessage = parseStateUpdateMessage(message);
     updateStateFromMessage(parsedMessage, client);
   }
 
-  void handleInitMessage(String message, Socket client){
+  void handleInitMessage(String message, Socket client) {
     List<String> initMessageParts = message.split("version:");
     int version = int.parse(initMessageParts[1]);
     if (version != serverVersion) {
       //version mismatch
-      setNetworkMessage("Client version mismatch. Please update. Client $version Server $serverVersion");
+      setNetworkMessage(
+          "Client version mismatch. Please update. Client $version Server $serverVersion");
       sendToOnly(
           "Error: Server Version is $serverVersion. client version is $version. Please update your client.",
           client);
@@ -215,32 +216,42 @@ abstract class GameServer {
     }
   }
 
-  void handleUndoMessage(){
+  void handleUndoMessage() {
     log('Server Receive undo command');
     undoState();
   }
-  void handleRedoMessage(){
+
+  void handleRedoMessage() {
     log('Server Receive redo command');
     redoState();
   }
-  void handlePongMessage(Socket client){
+
+  void handlePongMessage(Socket client) {
     log('pong from ${safeGetClientAddress(client)}');
   }
+
   void handlePingMessage(Socket client) {
     log('ping from ${safeGetClientAddress(client)}');
     sendToOnly("pong", client);
   }
 
-  String safeGetClientAddress(Socket client){
+  String safeGetClientAddress(Socket client) {
     try {
       return "${client.remoteAddress}:${client.remotePort}";
     } catch (exception) {
       log("Encountered error accessing client");
       log(exception.toString());
-      // There might be a chance that is is for a different 
-      // reason, but this is the most common reason I've 
+      // There might be a chance that is is for a different
+      // reason, but this is the most common reason I've
       // seen so far
-      return "Closed socket"; 
+      return "Closed socket";
     }
+  }
+
+  void bleMessage(String message);
+
+  void handleBLEMessage(String message) {
+    log("BLE message: $message");
+    bleMessage(message);
   }
 }

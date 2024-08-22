@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frosthaven_assistant/Layout/menus/add_standee_menu.dart';
 import 'package:frosthaven_assistant/Model/monster.dart';
+import 'package:frosthaven_assistant/Resource/bluetooth_standee_transition.dart';
 import 'package:frosthaven_assistant/Resource/commands/activate_monster_type_command.dart';
 import 'package:frosthaven_assistant/Resource/scaling.dart';
 import 'package:frosthaven_assistant/Resource/settings.dart';
@@ -46,6 +47,7 @@ class MonsterStatCardWidget extends StatelessWidget {
       if (settings.randomStandees.value == true) {
         int standeeNr = GameMethods.getRandomStandee(data);
         if (standeeNr != 0) {
+          BluetoothStandeeTransition.context = context;
           getIt<GameState>().action(AddStandeeCommand(
               standeeNr,
               null,

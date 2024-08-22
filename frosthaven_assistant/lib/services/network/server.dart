@@ -3,10 +3,10 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
 import 'package:frosthaven_assistant/Resource/settings.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant_server/game_server.dart';
-import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
 
 import '../service_locator.dart';
 import 'communication.dart';
@@ -65,6 +65,7 @@ class Server extends GameServer {
 
   @override
   void updateStateFromMessage(StateUpdateMessage message, Socket client) {
+    print(message);
     if (message.index > _gameState.commandDescriptions.length) {
       //invalid: index too high. send correction to clients
       String commandDescription = "";
@@ -168,5 +169,10 @@ class Server extends GameServer {
     sendToOnly(
         "Index:${_gameState.commandIndex.value}Description:${commandDescription}GameState:${_gameState.gameSaveStates.last!.getState()}",
         client);
+  }
+
+  @override
+  void bleMessage(String message) {
+    BluetoothMethods.handleMessage(message);
   }
 }
