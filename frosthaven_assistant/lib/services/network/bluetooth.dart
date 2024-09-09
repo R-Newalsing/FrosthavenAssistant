@@ -5,10 +5,13 @@ import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant/services/service_locator.dart';
 
 class Bluetooth {
+  final chainUuid = Guid("59a21f61-9f7a-4774-b41e-290c589c61e2");
   final showNumberUuid = Guid("cd9cd58a-0f46-4d5f-bc54-2d8a25eb90bb");
   final hideNumberUuid = Guid("fba2078b-bd52-4cae-9609-1c244b79ef3e");
   final serviceUuid = Guid("19b10000-e8f2-537e-4f6c-d104768a1214");
   final setNumberUuid = Guid("c82c1f2f-4d7b-4cb0-b09a-3dfc7ac3b661");
+
+  late BluetoothDevice device;
 
   List<BluetoothDevice> connectedDevices = [];
   List<DeviceIdentifier> readyDevices = [];
@@ -54,8 +57,9 @@ class Bluetooth {
         switch (state) {
           case BluetoothConnectionState.connected:
             if (!connectedDevices.contains(r.device)) {
-              connectedDevices.add(r.device);
-              getIt<GameState>().updateBluetoothContent.value++;
+              // connectedDevices.add(r.device);
+              // getIt<GameState>().updateBluetoothContent.value++;
+              device = r.device;
               discoverServices(r.device);
             }
             break;
@@ -93,8 +97,19 @@ class Bluetooth {
 
   void discoverServices(BluetoothDevice device) async {
     await device.discoverServices();
-    readyDevices.add(device.remoteId);
-    setNumber(device);
+    // readyDevices.add(device.remoteId);
+    // setNumber(device);
+    var char = getCharacteristic(chainUuid, device);
+    char.setNotifyValue(true);
+
+    var subscription = char.onValueReceived.listen((value) {
+      print(value);
+    });
+
+    device.cancelWhenDisconnected(subscription);
+
+    char.write([1]);
+
     getIt<GameState>().updateBluetoothContent.value++;
   }
 
@@ -118,6 +133,10 @@ class Bluetooth {
 
   void showNumber(BluetoothDevice device) {
     getCharacteristic(showNumberUuid, device).write([0x01]);
+  }
+
+  void startSearchDevices(BluetoothDevice device) {
+    getCharacteristic(chainUuid, device).write([0x01]);
   }
 
   void hideNumber(BluetoothDevice device) {
