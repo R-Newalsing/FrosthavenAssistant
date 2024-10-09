@@ -242,4 +242,9 @@ class StandaloneServer extends GameServer {
       return "Closed client: ";
     }
   }
+
+  @override
+  void bleMessage(String message) {
+    // TODO: implement bleMessage
+  }
 }

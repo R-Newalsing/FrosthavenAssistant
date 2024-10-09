@@ -114,7 +114,7 @@ class GameMethods {
                   continue;
                 }
 
-                if (standee.monster.id == item.id) {
+                if (standee.monster!.id == item.id) {
                   standee.handleMonsterCard(card.lines);
                 }
               }
@@ -1015,7 +1015,7 @@ class GameMethods {
                 monster)); //need to only sort this one item to place
       }
     }
-
+    print("Added standee $nr to $ownerId");
     BluetoothStandeeTransition.monsterInstance = instance;
     BluetoothStandeeTransition.monster = monster;
     BluetoothStandeeTransition.showMenu();

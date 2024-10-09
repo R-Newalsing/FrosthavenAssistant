@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:frosthaven_assistant/Model/bluetooth_standee.dart';
 import 'package:frosthaven_assistant/Resource/bluetooth_methods.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
 import 'package:frosthaven_assistant/services/network/bluetooth.dart';
@@ -25,7 +26,7 @@ class BluetoothMenuState extends State<BluetoothMenu> {
 
   @override
   Widget build(BuildContext context) {
-    var devices = _bluetooth.connectedDevices;
+    var standees = _gameState.bluetoothStandees;
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 450),
@@ -52,7 +53,9 @@ class BluetoothMenuState extends State<BluetoothMenu> {
             ValueListenableBuilder<int>(
               valueListenable: getIt<GameState>().updateBluetoothContent,
               builder: (context, value, child) {
-                if (devices.isEmpty) {
+                var connectedStandees =
+                    standees.where((s) => s.connected).toList();
+                if (connectedStandees.isEmpty) {
                   return const Center(
                     child: Text(
                       'No Bluetooth Standees',
@@ -62,12 +65,12 @@ class BluetoothMenuState extends State<BluetoothMenu> {
 
                 return Expanded(
                   child: ListView.builder(
-                    itemCount: devices.length,
+                    itemCount: connectedStandees.length,
                     itemBuilder: (context, index) {
                       return ListTile(
-                        title: getTileTitle(index),
-                        onTap: () => handleClick(index),
-                        trailing: getTrailing(index),
+                        title: getTileTitle(connectedStandees[index]),
+                        onTap: () => handleClick(connectedStandees[index]),
+                        trailing: getTrailing(connectedStandees[index]),
                       );
                     },
                   ),
@@ -97,74 +100,56 @@ class BluetoothMenuState extends State<BluetoothMenu> {
     _bluetooth.searchAndConnect();
   }
 
-  Text getTileTitle(int index) {
-    var number = index + 1;
-    var device = _bluetooth.connectedDevices[index];
-    var standee = getIt<GameState>().bluetoothStandees.firstWhereOrNull(
-          (element) => element.device.remoteId == device.remoteId,
-        );
+  Text getTileTitle(BluetoothStandee standee) {
+    var number = standee.macAddress.first.toRadixString(16).toUpperCase();
 
-    if (standee == null) {
-      var textColor = monsterIsConnected() ? Colors.grey : titleColor(index);
-
+    if (standee.monsterInstance != null) {
       return Text(
-        "$number - Empty bluetooth Standee",
-        style: TextStyle(color: textColor),
-      );
+          "$number - ${standee.monsterInstance!.name} (${standee.monsterInstance!.standeeNr})",
+          style: TextStyle(color: titleColor(standee)));
     }
 
+    var textColor = monsterIsConnected() ? Colors.grey : titleColor(standee);
+
     return Text(
-        "$number - ${standee.monsterInstance.name} (${standee.monsterInstance.standeeNr})",
-        style: TextStyle(color: titleColor(index)));
+      "$number - Empty bluetooth Standee",
+      style: TextStyle(color: textColor),
+    );
   }
 
-  Color titleColor(int index) {
-    var device = _bluetooth.connectedDevices[index];
-    var isElite = device.advName.contains("ELITE");
-
-    return isElite ? Colors.yellow.shade700 : Colors.black54;
+  Color titleColor(BluetoothStandee standee) {
+    return standee.elite ? Colors.yellow.shade700 : Colors.black54;
   }
 
   bool monsterIsConnected() {
     return _gameState.bluetoothStandees.firstWhereOrNull(
-              (element) => element.monsterInstance == widget.monsterInstance,
+              (element) =>
+                  element.monsterInstance != null &&
+                  element.monsterInstance == widget.monsterInstance,
             ) !=
             null
         ? true
         : false;
   }
 
-  handleClick(int index) {
+  handleClick(BluetoothStandee standee) {
     var monster = widget.monster;
     var monsterInstance = widget.monsterInstance;
-    var device = _bluetooth.connectedDevices[index];
-    var standee = getIt<GameState>().bluetoothStandees.firstWhereOrNull(
-          (element) => element.device.remoteId == device.remoteId,
-        );
 
-    if (device.servicesList.isEmpty ||
+    if (standee.monster != null ||
         monsterInstance == null ||
         monster == null ||
-        monsterIsConnected() ||
-        standee != null ||
-        !_bluetooth.readyDevices.contains(device.remoteId)) {
+        !standee.connected ||
+        monsterIsConnected()) {
       return;
     }
 
-    BluetoothMethods.addBluetoothStandee(
-      monster,
-      monsterInstance,
-      index,
-    );
+    BluetoothMethods.addBluetoothStandee(monster, monsterInstance, standee);
   }
 
-  Widget getTrailing(int index) {
-    var device = _bluetooth.connectedDevices[index];
-    var standee = getIt<GameState>().bluetoothStandees.firstWhereOrNull(
-          (element) => element.device.remoteId == device.remoteId,
-        );
-
-    if (standee == null || standee.monsterInstance != widget.monsterInstance) {
+  Widget getTrailing(BluetoothStandee standee) {
+    if (standee.monsterInstance == null ||
+        standee.monsterInstance != widget.monsterInstance) {
       return const SizedBox();
     }
 
@@ -173,7 +158,7 @@ class BluetoothMenuState extends State<BluetoothMenu> {
       color: Colors.red,
       onPressed: () {
         BluetoothMethods.deleteBluetoothStandee(standee);
-        BluetoothMethods.showNumbers();
+        // BluetoothMethods.showNumbers();
       },
     );
   }

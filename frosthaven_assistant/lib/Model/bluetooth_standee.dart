@@ -6,66 +6,44 @@ import 'package:frosthaven_assistant/Model/MonsterAbility.dart';
 import 'package:frosthaven_assistant/Resource/commands/change_stat_commands/change_health_command.dart';
 import 'package:frosthaven_assistant/Resource/enums.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
+import 'package:frosthaven_assistant/services/network/bluetooth.dart';
 import 'package:frosthaven_assistant/services/service_locator.dart';
 
 class BluetoothStandee {
-  final serviceUuid = Guid("19b10000-e8f2-537e-4f6c-d104768a1214");
-  final changeHealthUuid = Guid("6b061bdc-9bc1-4952-a96f-c6ed551b2c3e");
-  final toggleConditionUuid = Guid("97bada80-d0a4-4f36-80cf-d23d2eb2f81c");
-  final cardStatsUuid = Guid("af01172b-6892-4d76-a25b-147ab558a3fc");
-  final initValuesUuid = Guid("f5628575-fb78-462c-b1fa-d2e5edcd6389");
-  final initConditionsUuid = Guid("03958fe6-1777-401b-a815-f50971456caa");
-  final resetUuid = Guid("a808d258-da4f-41be-b350-4b171a9487db");
+  Monster? monster = null;
+  MonsterInstance? monsterInstance = null;
 
-  Monster monster;
-  MonsterInstance monsterInstance;
-  BluetoothDevice device;
-  List<BluetoothService> services = [];
+  List<int> macAddress = [];
+  bool elite = false;
+  bool connected = true;
+
   final GameState _gameState = getIt<GameState>();
+  final Bluetooth _bluetooth = getIt<Bluetooth>();
 
   BluetoothStandee({
-    required this.monster,
-    required this.monsterInstance,
-    required this.device,
-  }) {
-    subscribe();
-    initStats();
-  }
-
-  void subscribe() {
-    var characteristic = getCharacteristic(changeHealthUuid);
-
-    characteristic.setNotifyValue(true);
-
-    var subscription = characteristic.onValueReceived.listen((value) {
-      int val = int.parse(String.fromCharCodes(value));
-      val = val == 1 ? 1 : -1;
-      String name = monsterInstance.name;
-      String id = monsterInstance.getId();
-
-      getIt<GameState>().action(ChangeHealthCommand(val, id, name));
-    });
-
-    device.cancelWhenDisconnected(subscription);
-  }
+    required this.macAddress,
+    required this.elite,
+  }) {}
 
   void initStats() async {
-    var maxHealth = monsterInstance.maxHealth.value;
-    var health = monsterInstance.health.value;
+    var maxHealth = monsterInstance!.maxHealth.value;
+    var health = monsterInstance!.health.value;
     var shield = getShield();
-    var flying = monster.type.flying ? 1 : 0;
+    var flying = monster!.type.flying ? 1 : 0;
     var bonusShield = getBonusShield();
     List<int> data = [maxHealth, health, shield, flying, bonusShield];
 
-    for (var condition in monsterInstance.conditions.value) {
+    for (var condition in monsterInstance!.conditions.value) {
       data.add(condition.index);
     }
 
-    getCharacteristic(initValuesUuid).write(data);
+    _bluetooth.init(macAddress, data);
   }
 
   void reset() {
-    getCharacteristic(resetUuid).write([0x01]);
+    monster = null;
+    monsterInstance = null;
+    _bluetooth.reset(macAddress);
   }
 
   int getShield() {
@@ -74,30 +52,23 @@ class BluetoothStandee {
     return getShieldFromString(shieldLine);
   }
 
-  BluetoothCharacteristic getCharacteristic(Guid uuid) {
-    return getService()
-        .characteristics
-        .firstWhere((element) => element.uuid == uuid);
-  }
-
-  BluetoothService getService() {
-    return device.servicesList.firstWhere((element) {
-      return element.uuid == serviceUuid;
-    });
-  }
-
   void handleMonsterCard(List<String> lines) {
-    var shield = getShieldFromLines(lines);
-    var data = "$shield";
-    getCharacteristic(cardStatsUuid).write(utf8.encode(data));
+    _bluetooth.card(macAddress, [getShieldFromLines(lines)]);
   }
 
   void changeHealth(int health) {
-    getCharacteristic(changeHealthUuid).write([health]);
+    _bluetooth.changeHealth(macAddress, [health]);
+  }
+
+  void handleHealthChange(int health) {
+    String name = monsterInstance!.name;
+    String id = monsterInstance!.getId();
+
+    _gameState.action(ChangeHealthCommand(health, id, name));
   }
 
   void toggleCondition(Condition condition) {
-    getCharacteristic(toggleConditionUuid).write([condition.index]);
+    _bluetooth.toggleCondition(macAddress, [condition.index]);
   }
 
   int getShieldFromLines(List<String> lines) {
@@ -123,19 +94,19 @@ class BluetoothStandee {
   }
 
   String? getMonsterShield() {
-    if (monsterInstance.type == MonsterType.normal) {
-      if (monster
-          .type.levels[monster.level.value].normal!.attributes.isNotEmpty) {
-        return monster.type.levels[monster.level.value].normal!.attributes
+    if (monsterInstance!.type == MonsterType.normal) {
+      if (monster!
+          .type.levels[monster!.level.value].normal!.attributes.isNotEmpty) {
+        return monster!.type.levels[monster!.level.value].normal!.attributes
             .firstWhere((element) => element.contains("%shield%"),
                 orElse: () => '');
       }
     }
 
-    if (monsterInstance.type == MonsterType.elite) {
-      if (monster
-          .type.levels[monster.level.value].elite!.attributes.isNotEmpty) {
-        return monster.type.levels[monster.level.value].elite!.attributes
+    if (monsterInstance!.type == MonsterType.elite) {
+      if (monster!
+          .type.levels[monster!.level.value].elite!.attributes.isNotEmpty) {
+        return monster!.type.levels[monster!.level.value].elite!.attributes
             .firstWhere((element) => element.contains("%shield%"),
                 orElse: () => '');
       }
@@ -153,7 +124,7 @@ class BluetoothStandee {
   MonsterAbilityCardModel? getLastDrawnCard() {
     for (MonsterAbilityState deck in _gameState.currentAbilityDecks) {
       for (var item in _gameState.currentList) {
-        if (item is Monster && item.id == monster.id) {
+        if (item is Monster && item.id == monster!.id) {
           if (item.type.deck == deck.name && deck.discardPile.isNotEmpty) {
             return deck.discardPile.peek;
           }

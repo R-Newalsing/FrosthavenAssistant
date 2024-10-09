@@ -826,67 +826,71 @@ class StatusMenuState extends State<StatusMenu> {
             // crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ValueListenableBuilder<int>(
-                    valueListenable: getIt<GameState>().updateBluetoothContent,
-                    builder: (context, value, child) {
-                      var number = BluetoothMethods.getNumberByMonsterInstane(
-                          figure as MonsterInstance);
+              figure is! MonsterInstance
+                  ? const SizedBox(width: 0)
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ValueListenableBuilder<int>(
+                          valueListenable:
+                              getIt<GameState>().updateBluetoothContent,
+                          builder: (context, value, child) {
+                            if (!BluetoothMethods.isVisibile(figure)) {
+                              return const SizedBox(width: 5);
+                            }
 
-                      if (number == 0) {
-                        return const SizedBox(width: 5);
-                      }
-
-                      return Row(
-                        children: [
-                          const SizedBox(width: 15),
-                          Icon(
-                            Icons.bluetooth_connected,
-                            size: 18 * scale,
-                            color: Colors.blue,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            BluetoothMethods.getNumberByMonsterInstane(figure)
-                                .toString(),
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontSize: 18 * scale,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          BluetoothMethods.showNumbers();
-                          openDialogWithDismissOption(
-                            context,
-                            BluetoothMenu(
-                              monster: monster,
-                              monsterInstance: figure as MonsterInstance,
-                            ),
-                            false,
-                          );
-                        },
-                        child: Text(
-                          'Bluetooth Standees',
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontSize: 18 * scale,
-                          ),
+                            return Row(
+                              children: [
+                                const SizedBox(width: 15),
+                                Icon(
+                                  Icons.bluetooth_connected,
+                                  size: 18 * scale,
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  BluetoothMethods.getNumberByMonsterInstane(
+                                          figure)
+                                      .toString(),
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 18 * scale,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                      ),
-                      const SizedBox(width: 15),
-                    ],
-                  ),
-                ],
-              ),
+                        figure is! MonsterInstance
+                            ? const SizedBox(width: 0)
+                            : Row(
+                                children: [
+                                  TextButton(
+                                    onPressed: () {
+                                      // BluetoothMethods.showNumbers();
+                                      openDialogWithDismissOption(
+                                        context,
+                                        BluetoothMenu(
+                                          monster: monster,
+                                          monsterInstance:
+                                              figure as MonsterInstance,
+                                        ),
+                                        false,
+                                      );
+                                    },
+                                    child: Text(
+                                      'Bluetooth Standees',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontSize: 18 * scale,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 15),
+                                ],
+                              ),
+                      ],
+                    ),
             ],
           ),
         ],

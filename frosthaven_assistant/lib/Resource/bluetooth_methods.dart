@@ -15,23 +15,22 @@ class BluetoothMethods {
   static void addBluetoothStandee(
     Monster monster,
     MonsterInstance monsterInstance,
-    int index,
+    BluetoothStandee standee,
   ) {
-    var device = _bluetooth.connectedDevices[index];
-    var standee = BluetoothStandee(
-      monster: monster,
-      monsterInstance: monsterInstance,
-      device: device,
-    );
+    standee.monster = monster;
+    standee.monsterInstance = monsterInstance;
+    standee.initStats();
 
-    _gameState.bluetoothStandees.add(standee);
-    BluetoothMethods.showNumbers();
     _gameState.updateBluetoothContent.value++;
   }
 
   static int getNumberByMonsterInstane(MonsterInstance instance) {
     for (int i = 0; i < _gameState.bluetoothStandees.length; i++) {
-      if (_gameState.bluetoothStandees[i].monsterInstance.getId() ==
+      if (_gameState.bluetoothStandees[i].monsterInstance == null) {
+        continue;
+      }
+
+      if (_gameState.bluetoothStandees[i].monsterInstance!.getId() ==
           instance.getId()) {
         return i + 1;
       }
@@ -40,9 +39,26 @@ class BluetoothMethods {
     return 0;
   }
 
+  static bool isVisibile(MonsterInstance instance) {
+    for (var standee in _gameState.bluetoothStandees) {
+      if (standee.monsterInstance == null) {
+        continue;
+      }
+
+      if (standee.monsterInstance!.getId() == instance.getId()) {
+        return standee.connected;
+      }
+    }
+    return false;
+  }
+
   static BluetoothStandee? getBluetoothStandeeByFigureId(String figureId) {
     for (var device in _gameState.bluetoothStandees) {
-      if (device.monsterInstance.getId() == figureId) {
+      if (device.monsterInstance == null) {
+        continue;
+      }
+
+      if (device.monsterInstance!.getId() == figureId) {
         return device;
       }
     }
@@ -52,27 +68,16 @@ class BluetoothMethods {
 
   static void deleteBluetoothStandee(BluetoothStandee standee) {
     standee.reset();
-    _gameState.bluetoothStandees.remove(standee);
+    // _gameState.bluetoothStandees.remove(standee);
     _gameState.updateBluetoothContent.value++;
   }
 
   static void showNumbers() {
-    for (var device in _bluetooth.connectedDevices) {
-      var standee =
-          _gameState.bluetoothStandees.where((e) => e.device == device);
-
-      if (standee.isEmpty) {
-        _bluetooth.showNumber(device);
-      } else {
-        _bluetooth.hideNumber(device);
-      }
-    }
+    _bluetooth.showNumber();
   }
 
   static void hideNumbers() {
-    for (var device in _bluetooth.connectedDevices) {
-      _bluetooth.hideNumber(device);
-    }
+    _bluetooth.hideNumber();
   }
 
   static void toggleCondition(Condition condition, String figureId) {
@@ -82,7 +87,11 @@ class BluetoothMethods {
 
   static void toggelingCondition(Condition condition, String figureId) {
     for (var device in getIt<GameState>().bluetoothStandees) {
-      if (device.monsterInstance.getId() == figureId) {
+      if (device.monsterInstance == null) {
+        continue;
+      }
+
+      if (device.monsterInstance!.getId() == figureId) {
         device.toggleCondition(condition);
       }
     }

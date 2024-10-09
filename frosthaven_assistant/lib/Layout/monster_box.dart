@@ -158,10 +158,9 @@ class MonsterBox extends StatelessWidget {
                   valueListenable: getIt<GameState>().updateBluetoothContent,
                   builder: (context, value, child) {
                     return Image(
-                      color:
-                          BluetoothMethods.getNumberByMonsterInstane(data) > 0
-                              ? Colors.blue
-                              : null,
+                      color: BluetoothMethods.isVisibile(data)
+                          ? Colors.blue
+                          : null,
                       //fit: BoxFit.contain,
                       height: 100 * scale,
                       width: 17 * scale,
