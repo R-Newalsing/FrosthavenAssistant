@@ -276,7 +276,8 @@ class SettingsMenuState extends State<SettingsMenu> {
                               Slider(
                                 min: min(0.8, maxBarScale),
                                 max: min(maxBarScale, 3.0),
-                                value: min (settings.userScalingBars.value, maxBarScale),
+                                value: min(settings.userScalingBars.value,
+                                    maxBarScale),
                                 onChanged: (value) {
                                   setState(() {
                                     settings.userScalingBars.value = value;
@@ -302,14 +303,9 @@ class SettingsMenuState extends State<SettingsMenu> {
                                               settings.style.value =
                                                   Style.frosthaven;
                                               settings.saveToDisk();
-<<<<<<< HEAD
-                                              //ThemeSwitcher.of(context).switchTheme(themeFH);
                                               getIt<GameState>()
                                                   .updateList
                                                   .value++;
-=======
-                                              getIt<GameState>().updateList.value++;
->>>>>>> upstream/main
                                             });
                                           }),
                                       const Text('Frosthaven')
@@ -329,8 +325,7 @@ class SettingsMenuState extends State<SettingsMenu> {
                                                       .currentCampaign
                                                       .value ==
                                                   "Frosthaven") {
-                                              } else {
-                                              }
+                                              } else {}
                                               getIt<GameState>()
                                                   .updateList
                                                   .value++;

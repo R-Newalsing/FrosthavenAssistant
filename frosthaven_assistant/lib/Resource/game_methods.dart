@@ -38,7 +38,8 @@ class GameMethods {
     double totalLevels = 0;
     double nrOfCharacters = 0;
     for (var item in _gameState.currentList) {
-      if (item is Character && !GameMethods.isObjectiveOrEscort(item.characterClass)) {
+      if (item is Character &&
+          !GameMethods.isObjectiveOrEscort(item.characterClass)) {
         totalLevels += item.characterState.level.value;
         nrOfCharacters++;
       }
@@ -401,7 +402,8 @@ class GameMethods {
   static void applyDifficulty(_StateModifier _) {
     if (_gameState.autoScenarioLevel.value == true) {
       //adjust difficulty
-      int newLevel = GameMethods.getRecommendedLevel() + _gameState.difficulty.value;
+      int newLevel =
+          GameMethods.getRecommendedLevel() + _gameState.difficulty.value;
       if (newLevel > 7) {
         newLevel = 7;
       }
@@ -422,8 +424,10 @@ class GameMethods {
       level = character.characterClass.healthByLevel.length;
     }
     character.characterState.setFigureLevel(_, level);
-    character.characterState.setHealth(_, character.characterClass.healthByLevel[level - 1]);
-    character.characterState.setMaxHealth(_, character.characterState.health.value);
+    character.characterState
+        .setHealth(_, character.characterClass.healthByLevel[level - 1]);
+    character.characterState
+        .setMaxHealth(_, character.characterState.health.value);
 
     if (character.id == "Beast Tyrant") {
       if (character.characterState.summonList.isNotEmpty) {
@@ -526,7 +530,6 @@ class GameMethods {
             : [];
       }
     } else {
-    } else {
       if (scenario != "custom") {
         var scenarioData = _gameData.modelData
             .value[_gameState.currentCampaign.value]?.scenarios[scenario];
@@ -534,8 +537,9 @@ class GameMethods {
           monsters = scenarioData.monsters;
           specialRules = scenarioData.specialRules.toList();
           initMessage = scenarioData.initMessage;
-          roomMonsterData =
-              scenarioData.monsterStandees != null ? scenarioData.monsterStandees!.toList() : [];
+          roomMonsterData = scenarioData.monsterStandees != null
+              ? scenarioData.monsterStandees!.toList()
+              : [];
           for (var item in scenarioData.sections) {
             subSections.add(item.name);
           }
@@ -737,12 +741,13 @@ class GameMethods {
     }
 
     //handle random sections
-    var rule = specialRules.firstWhereOrNull((element) => element.type == "RandomSections");
+    var rule = specialRules
+        .firstWhereOrNull((element) => element.type == "RandomSections");
     if (rule != null) {
       subSections.shuffle();
       //add the random selected to rule.list
-      SpecialRule newRule =
-          SpecialRule("RandomSections", "", 0, 0, 0, "", subSections.sublist(0, 3), false, "");
+      SpecialRule newRule = SpecialRule("RandomSections", "", 0, 0, 0, "",
+          subSections.sublist(0, 3), false, "");
       specialRules.remove(rule);
       specialRules.add(newRule);
     }
@@ -923,8 +928,9 @@ class GameMethods {
 
   static int getRandomStandee(Monster data) {
     int nrOfStandees = data.type.count;
-    if(data.type.name == "Polar Bear") {
-      nrOfStandees = 4; //for the special case where there are only 4 standees in first printing
+    if (data.type.name == "Polar Bear") {
+      nrOfStandees =
+          4; //for the special case where there are only 4 standees in first printing
     }
     List<int> available = [];
     for (int i = 0; i < nrOfStandees; i++) {
@@ -1160,7 +1166,7 @@ class GameMethods {
 
           for (int i = 0; i < normalAmount; i++) {
             int randomNr = GameMethods.getRandomStandee(data);
-            if(addSorted) {
+            if (addSorted) {
               randomNr = GameMethods.getNextAvailableBnBStandee(data);
             }
             if (randomNr != 0) {
