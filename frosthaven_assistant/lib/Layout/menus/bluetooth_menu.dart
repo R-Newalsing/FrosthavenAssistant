@@ -23,10 +23,13 @@ class BluetoothMenu extends StatefulWidget {
 class BluetoothMenuState extends State<BluetoothMenu> {
   final Bluetooth _bluetooth = getIt<Bluetooth>();
   final GameState _gameState = getIt<GameState>();
+  var searching = false;
 
   @override
   Widget build(BuildContext context) {
     var standees = _gameState.bluetoothStandees;
+
+    _bluetooth.searchListeners.add(searchingFlase);
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 450),
@@ -41,8 +44,12 @@ class BluetoothMenuState extends State<BluetoothMenu> {
               margin: const EdgeInsets.only(left: 10, right: 10),
               child: TextButton(
                 onPressed: () => searchAndConnect(),
-                child: const Text(
-                  'Search for Bluetooth Standees',
+                child: Text(
+                  searching
+                      ? 'Searching...'
+                      : _bluetooth.device.isConnected
+                          ? 'Refresh'
+                          : 'Search for Bluetooth Standees',
                   style: TextStyle(fontSize: 20),
                 ),
               ),
@@ -95,7 +102,16 @@ class BluetoothMenuState extends State<BluetoothMenu> {
     );
   }
 
+  searchingFlase() => setState(() => searching = false);
+
   searchAndConnect() {
+    if (searching) {
+      return;
+    }
+
+    if (!_bluetooth.device.isConnected) {
+      setState(() => searching = true);
+    }
     _bluetooth.searchAndConnect();
   }
 

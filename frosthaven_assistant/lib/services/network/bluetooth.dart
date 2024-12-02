@@ -32,6 +32,7 @@ class Bluetooth {
   List<int> macAddresses = [];
   List<int> messageCache = [];
   List<int> handshakeCache = [];
+  final List<Function> searchListeners = [];
 
   BluetoothDevice device = BluetoothDevice(remoteId: DeviceIdentifier(''));
 
@@ -74,6 +75,9 @@ class Bluetooth {
       timeout: const Duration(seconds: 6),
       withServices: [indentityUuid],
     );
+
+    await Future.delayed(const Duration(seconds: 6));
+    notifyListeners(0);
   }
 
   void scanListener(List<ScanResult> results) {
@@ -82,6 +86,7 @@ class Bluetooth {
         switch (state) {
           case BluetoothConnectionState.connected:
             if (!device.isConnected) {
+              notifyListeners(1);
               hasDisconnected = false;
               device = r.device;
               discoverServices();
@@ -92,6 +97,8 @@ class Bluetooth {
               removeDeviceFromList();
               device = BluetoothDevice(remoteId: DeviceIdentifier(''));
               hasDisconnected = true;
+
+              notifyListeners(0);
               searchAndConnect();
             }
             break;
@@ -105,7 +112,38 @@ class Bluetooth {
     }
   }
 
-  void removeDeviceFromList() {}
+  void removeDeviceFromList() {
+    var isElite = device.advName.contains('-E');
+    var id = int.parse(device.remoteId.str.split(':').last, radix: 16);
+    var address;
+
+    if (isElite) {
+      address = id | (1 << 7);
+    } else {
+      address = id & ~(1 << 7);
+    }
+
+    var existingStandee = getIt<GameState>()
+        .bluetoothStandees
+        .firstWhereOrNull((standee) => standee.address == address);
+
+    if (existingStandee != null) {
+      existingStandee.connected = false;
+      getIt<GameState>().updateBluetoothContent.value++;
+    }
+
+    macAddresses.remove(address);
+  }
+
+  void notifyListeners(int duration) async {
+    if (duration != 0) {
+      await Future.delayed(Duration(seconds: duration));
+    }
+
+    for (var listener in searchListeners) {
+      listener();
+    }
+  }
 
   void discoverServices() async {
     await device.discoverServices();
