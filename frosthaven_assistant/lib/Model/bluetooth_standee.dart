@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:collection/collection.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:frosthaven_assistant/Model/MonsterAbility.dart';
 import 'package:frosthaven_assistant/Resource/commands/change_stat_commands/change_health_command.dart';
 import 'package:frosthaven_assistant/Resource/enums.dart';
@@ -13,7 +10,7 @@ class BluetoothStandee {
   Monster? monster = null;
   MonsterInstance? monsterInstance = null;
 
-  List<int> macAddress = [];
+  int address = 0;
   bool elite = false;
   bool connected = true;
 
@@ -21,11 +18,15 @@ class BluetoothStandee {
   final Bluetooth _bluetooth = getIt<Bluetooth>();
 
   BluetoothStandee({
-    required this.macAddress,
+    required this.address,
     required this.elite,
   }) {}
 
   void initStats() async {
+    if (monsterInstance == null) {
+      return;
+    }
+
     var maxHealth = monsterInstance!.maxHealth.value;
     var health = monsterInstance!.health.value;
     var shield = getShield();
@@ -37,13 +38,13 @@ class BluetoothStandee {
       data.add(condition.index);
     }
 
-    _bluetooth.init(macAddress, data);
+    _bluetooth.init(address, data);
   }
 
   void reset() {
     monster = null;
     monsterInstance = null;
-    _bluetooth.reset(macAddress);
+    _bluetooth.reset(address);
   }
 
   int getShield() {
@@ -53,22 +54,24 @@ class BluetoothStandee {
   }
 
   void handleMonsterCard(List<String> lines) {
-    _bluetooth.card(macAddress, [getShieldFromLines(lines)]);
+    _bluetooth.card(address, [getShieldFromLines(lines)]);
   }
 
   void changeHealth(int health) {
-    _bluetooth.changeHealth(macAddress, [health]);
+    _bluetooth.changeHealth(address, [health]);
   }
 
   void handleHealthChange(int health) {
     String name = monsterInstance!.name;
     String id = monsterInstance!.getId();
+    FigureState figure = GameMethods.getFigure(name, id)!;
+    int change = health - figure.health.value;
 
-    _gameState.action(ChangeHealthCommand(health, id, name));
+    _gameState.action(ChangeHealthCommand(change, id, name));
   }
 
   void toggleCondition(Condition condition) {
-    _bluetooth.toggleCondition(macAddress, [condition.index]);
+    _bluetooth.toggleCondition(address, [condition.index]);
   }
 
   int getShieldFromLines(List<String> lines) {

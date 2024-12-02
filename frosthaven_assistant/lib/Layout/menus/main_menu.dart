@@ -214,7 +214,6 @@ Drawer createMainMenu(BuildContext context) {
                 title: const Text('Bluetooth'),
                 onTap: () {
                   Navigator.pop(context);
-                  // BluetoothMethods.showNumbers();
                   openDialog(context, const BluetoothMenu());
                 },
               ),

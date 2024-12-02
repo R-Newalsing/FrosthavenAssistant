@@ -86,7 +86,6 @@ class BluetoothMenuState extends State<BluetoothMenu> {
             child: TextButton(
               child: const Text('Close', style: TextStyle(fontSize: 20)),
               onPressed: () {
-                BluetoothMethods.hideNumbers();
                 Navigator.pop(context);
               },
             ),
@@ -101,7 +100,7 @@ class BluetoothMenuState extends State<BluetoothMenu> {
   }
 
   Text getTileTitle(BluetoothStandee standee) {
-    var number = standee.macAddress.first.toRadixString(16).toUpperCase();
+    var number = standee.address.toRadixString(16).toUpperCase();
 
     if (standee.monsterInstance != null) {
       return Text(
@@ -158,7 +157,6 @@ class BluetoothMenuState extends State<BluetoothMenu> {
       color: Colors.red,
       onPressed: () {
         BluetoothMethods.deleteBluetoothStandee(standee);
-        // BluetoothMethods.showNumbers();
       },
     );
   }

@@ -1,6 +1,6 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:frosthaven_assistant/Model/bluetooth_standee.dart';
 import 'package:frosthaven_assistant/Resource/state/game_state.dart';
@@ -9,20 +9,29 @@ import 'package:frosthaven_assistant/services/service_locator.dart';
 class Bluetooth {
   final serviceUuid = Guid("19b10000-e8f2-537e-4f6c-d104768a1214");
 
-  final chainUuid = Guid("59a21f61-9f7a-4774-b41e-290c589c61e2");
-  final toggleNumberUuid = Guid("cd9cd58a-0f46-4d5f-bc54-2d8a25eb90bb");
-  final hideNumberUuid = Guid("fba2078b-bd52-4cae-9609-1c244b79ef3e");
-  final setNumberUuid = Guid("c82c1f2f-4d7b-4cb0-b09a-3dfc7ac3b661");
-  final changeHealthUuid = Guid("6b061bdc-9bc1-4952-a96f-c6ed551b2c3e");
-  final toggleConditionUuid = Guid("97bada80-d0a4-4f36-80cf-d23d2eb2f81c");
-  final cardStatsUuid = Guid("af01172b-6892-4d76-a25b-147ab558a3fc");
-  final initValuesUuid = Guid("f5628575-fb78-462c-b1fa-d2e5edcd6389");
-  final initConditionsUuid = Guid("03958fe6-1777-401b-a815-f50971456caa");
-  final resetUuid = Guid("a808d258-da4f-41be-b350-4b171a9487db");
+  final messageUuid = Guid("6b061bdc-9bc1-4952-a96f-c6ed551b2c3e");
+  final handshakeUuid = Guid("998ff920-81af-42a9-a915-f88025f9647d");
+  final indentityUuid = Guid("14128a76-04d1-6c4f-537e-e8f219b10000");
+
+  static const DATA_TYPE_INDEX = 0;
+  static const DATA_CACHE_INDEX = 1;
+  static const DATA_ADDR_INDEX = 2;
+
+  static const MESH_MESSAGE_CHANGE_HEALTH = 0;
+  static const MESH_MESSAGE_CONDITIONS = 1;
+  static const MESH_MESSAGE_SHIELDS = 2;
+  static const MESH_MESSAGE_FLYING = 3;
+  static const MESH_MESSAGE_INIT = 4;
+  static const MESH_MESSAGE_RESET = 5;
+
+  static const MESH_HANDSHAKE_NODES = 0;
+  static const MESH_HANDSHAKE_LOST_NODE = 1;
+  static const MESH_HANDSHAKE_FLOOD_NODES = 2;
 
   bool hasDisconnected = false;
-  int standeesAmount = 0;
-  List<List<int>> macAddresses = [];
+  List<int> macAddresses = [];
+  List<int> messageCache = [];
+  List<int> handshakeCache = [];
 
   BluetoothDevice device = BluetoothDevice(remoteId: DeviceIdentifier(''));
 
@@ -44,7 +53,7 @@ class Bluetooth {
 
   void searchAndConnect() async {
     if (device.isConnected) {
-      getCharacteristic(chainUuid).write([0]);
+      getCharacteristic(handshakeUuid).write([MESH_HANDSHAKE_FLOOD_NODES]);
       return;
     }
 
@@ -63,7 +72,7 @@ class Bluetooth {
 
     FlutterBluePlus.startScan(
       timeout: const Duration(seconds: 6),
-      withNames: ["BLUETOOTH-STANDEE"],
+      withServices: [indentityUuid],
     );
   }
 
@@ -80,6 +89,7 @@ class Bluetooth {
             break;
           case BluetoothConnectionState.disconnected:
             if (!hasDisconnected) {
+              removeDeviceFromList();
               device = BluetoothDevice(remoteId: DeviceIdentifier(''));
               hasDisconnected = true;
               searchAndConnect();
@@ -91,74 +101,16 @@ class Bluetooth {
         }
       });
 
-      r.device.connect(mtu: null);
+      r.device.connect();
     }
   }
+
+  void removeDeviceFromList() {}
 
   void discoverServices() async {
     await device.discoverServices();
 
     subscribe();
-  }
-
-  void receivedChainData(List<int> data) {
-    if (data.length == 1) {
-      macAddresses.clear();
-      standeesAmount = data[0];
-      getCharacteristic(chainUuid).write([0x01]);
-      return;
-    }
-
-    var macAddress = data.sublist(0, 6);
-    macAddresses.add(macAddress);
-    var existingStandee = getIt<GameState>().bluetoothStandees.firstWhereOrNull(
-          (standee) => ListEquality().equals(standee.macAddress, macAddress),
-        );
-
-    if (existingStandee == null) {
-      getIt<GameState>().bluetoothStandees.add(
-            BluetoothStandee(
-              macAddress: macAddress,
-              elite: data[6] == 1,
-            ),
-          );
-    } else {
-      existingStandee.connected = true;
-    }
-
-    if (macAddresses.length == standeesAmount) {
-      for (var standee in getIt<GameState>().bluetoothStandees) {
-        if (!macAddresses
-            .any((mac) => ListEquality().equals(mac, standee.macAddress))) {
-          standee.connected = false;
-        }
-      }
-    }
-
-    getIt<GameState>().updateBluetoothContent.value++;
-  }
-
-  void setNumbers() {
-    getCharacteristic(setNumberUuid).write([0x01]);
-  }
-
-  void showNumber() {
-    if (!device.isConnected) {
-      return;
-    }
-
-    getCharacteristic(toggleNumberUuid).write([0x01]);
-  }
-
-  void startSearchDevices() {
-    getCharacteristic(chainUuid).write([0x01]);
-  }
-
-  void hideNumber() {
-    if (!device.isConnected) {
-      return;
-    }
-    getCharacteristic(toggleNumberUuid).write([0x00]);
   }
 
   BluetoothCharacteristic getCharacteristic(Guid uuid) {
@@ -173,65 +125,150 @@ class Bluetooth {
     });
   }
 
-  void subscribe() {
-    print("Subscribing to characteristics");
-    var characteristic = getCharacteristic(changeHealthUuid);
-    characteristic.setNotifyValue(true);
+  void subscribe() async {
+    var messageChar = getCharacteristic(messageUuid);
+    var handshakeChar = getCharacteristic(handshakeUuid);
 
-    device
-        .cancelWhenDisconnected(characteristic.onValueReceived.listen((value) {
-      var macAddress = value.sublist(0, 6);
-      int val = value[6] == 1 ? 1 : -1;
+    await messageChar.setNotifyValue(true);
+    await handshakeChar.setNotifyValue(true);
 
-      var standee = getIt<GameState>().bluetoothStandees.firstWhereOrNull(
-            (standee) => listEquals(standee.macAddress, macAddress),
-          );
+    var messageSub = messageChar.onValueReceived.listen(handleMessage);
+    var handshakeSub = handshakeChar.onValueReceived.listen(handleHandshake);
 
-      if (standee == null) {
-        return;
+    device.cancelWhenDisconnected(messageSub);
+    device.cancelWhenDisconnected(handshakeSub);
+
+    handshakeChar.write([MESH_HANDSHAKE_FLOOD_NODES]);
+  }
+
+  void handleMessage(List<int> data) {
+    print(data);
+
+    var type = data[DATA_TYPE_INDEX];
+
+    if (messageCache.contains(data[DATA_CACHE_INDEX])) {
+      return;
+    }
+
+    messageCache.insert(0, data[DATA_CACHE_INDEX]);
+    var addr = data[DATA_ADDR_INDEX];
+    var standee = getIt<GameState>()
+        .bluetoothStandees
+        .firstWhere((standee) => standee.address == addr);
+
+    switch (type) {
+      case MESH_MESSAGE_CHANGE_HEALTH:
+        var health = data[DATA_ADDR_INDEX + 2];
+        standee.handleHealthChange(health);
+        break;
+    }
+  }
+
+  void handleHandshake(List<int> data) {
+    print(data);
+    var type = data[DATA_TYPE_INDEX];
+
+    if (handshakeCache.contains(data[DATA_CACHE_INDEX])) {
+      return;
+    }
+
+    handshakeCache.insert(0, data[DATA_CACHE_INDEX]);
+
+    if (type == MESH_HANDSHAKE_NODES) {
+      for (int i = 4; i < data.length; i++) {
+        var address = data[i];
+
+        if (!macAddresses.any((mac) => mac == address)) {
+          macAddresses.add(address);
+        }
+
+        var existingStandee = getIt<GameState>()
+            .bluetoothStandees
+            .firstWhereOrNull((standee) => standee.address == address);
+
+        if (existingStandee == null) {
+          getIt<GameState>().bluetoothStandees.add(
+                BluetoothStandee(
+                  address: address,
+                  elite: (address & 0x80) != 0,
+                ),
+              );
+        } else {
+          existingStandee.connected = true;
+          existingStandee.initStats();
+        }
       }
 
-      standee.handleHealthChange(val);
-    }));
+      for (var standee in getIt<GameState>().bluetoothStandees) {
+        if (!macAddresses.any((mac) => mac == standee.address)) {
+          standee.connected = false;
+        }
+      }
 
-    var char = getCharacteristic(chainUuid);
-    char.setNotifyValue(true);
+      getIt<GameState>().updateBluetoothContent.value++;
+    }
 
-    device
-        .cancelWhenDisconnected(char.onValueReceived.listen(receivedChainData));
+    if (type == MESH_HANDSHAKE_LOST_NODE) {
+      var address = data[DATA_ADDR_INDEX];
+      var existingStandee = getIt<GameState>()
+          .bluetoothStandees
+          .firstWhereOrNull((standee) => standee.address == address);
 
-    print("Subscribed to characteristics");
-    char.write([0]);
+      if (existingStandee != null) {
+        existingStandee.connected = false;
+      }
+
+      if (macAddresses.any((mac) => mac == address)) {
+        macAddresses.remove(address);
+      }
+
+      getIt<GameState>().updateBluetoothContent.value++;
+    }
   }
 
-  void init(List<int> macAddress, List<int> data) {
-    data.insertAll(0, macAddress);
+  void sendMessage(int type, int address, List<int> data) {
+    int num;
 
-    getCharacteristic(initValuesUuid).write(data);
+    do {
+      num = new Random().nextInt(256);
+    } while (messageCache.any((numInCache) => numInCache == num));
+
+    messageCache.insert(0, num);
+
+    if (messageCache.length > 20) {
+      messageCache = messageCache.sublist(0, 20);
+    }
+
+    data.insert(0, 10);
+    data.insert(0, address);
+    data.insert(0, num);
+    data.insert(0, type);
+    print("Sending: $data");
+
+    getCharacteristic(messageUuid).write(data);
   }
 
-  void reset(List<int> macAddress) {
-    var data = [0x01];
-    data.insertAll(0, macAddress);
+  void sendHandshake(List<int> data) {}
 
-    getCharacteristic(resetUuid).write(data);
+  void init(int address, List<int> data) {
+    sendMessage(MESH_MESSAGE_INIT, address, data);
   }
 
-  void card(List<int> macAddress, List<int> data) {
-    data.insertAll(0, macAddress);
+  void reset(int address) {
+    var data = [address, 0x01];
 
-    getCharacteristic(cardStatsUuid).write(data);
+    sendMessage(MESH_MESSAGE_RESET, address, data);
   }
 
-  void changeHealth(List<int> macAddress, List<int> data) {
-    data.insertAll(0, macAddress);
-
-    getCharacteristic(changeHealthUuid).write(data);
+  void card(int address, List<int> data) {
+    sendMessage(MESH_MESSAGE_SHIELDS, address, data);
   }
 
-  void toggleCondition(List<int> macAddress, List<int> data) {
-    data.insertAll(0, macAddress);
+  void changeHealth(int address, List<int> data) {
+    sendMessage(MESH_MESSAGE_CHANGE_HEALTH, address, data);
+  }
 
-    getCharacteristic(toggleConditionUuid).write(data);
+  void toggleCondition(int address, List<int> data) {
+    sendMessage(MESH_MESSAGE_CONDITIONS, address, data);
   }
 }

@@ -72,14 +72,6 @@ class BluetoothMethods {
     _gameState.updateBluetoothContent.value++;
   }
 
-  static void showNumbers() {
-    _bluetooth.showNumber();
-  }
-
-  static void hideNumbers() {
-    _bluetooth.hideNumber();
-  }
-
   static void toggleCondition(Condition condition, String figureId) {
     toggelingCondition(condition, figureId);
     notifyChanges("BLE:toggleConditionConditionData:$condition,$figureId");

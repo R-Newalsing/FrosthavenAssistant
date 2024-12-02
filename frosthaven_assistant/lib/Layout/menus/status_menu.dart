@@ -867,7 +867,6 @@ class StatusMenuState extends State<StatusMenu> {
                                 children: [
                                   TextButton(
                                     onPressed: () {
-                                      // BluetoothMethods.showNumbers();
                                       openDialogWithDismissOption(
                                         context,
                                         BluetoothMenu(
