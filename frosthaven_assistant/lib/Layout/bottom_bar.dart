@@ -55,7 +55,6 @@ Widget createLevelWidget(BuildContext context) {
     color: Colors.transparent,
       child :InkWell(
     onTap: () {
-      //open stats menu
       openDialog(
         context,
         const SetLevelMenu(),
@@ -259,7 +258,9 @@ Widget createBottomBar(BuildContext context) {
                               const DrawButton(),
                               createLevelWidget(context),
                               const NetworkUI(),
-                              modifiersFitOnBar(context) && getIt<Settings>().showAmdDeck.value
+                              modifiersFitOnBar(context) &&
+                                  getIt<Settings>().showAmdDeck.value &&
+                                  getIt<GameState>().currentCampaign.value != "Buttons and Bugs" //hide amd deck for buttons and bugs
                                   ? const ModifierDeckWidget(name: '',)
                                   : Container()
                             ],

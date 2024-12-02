@@ -196,7 +196,6 @@ class SelectScenarioMenuState extends State<SelectScenarioMenu> {
       onTap: () {
         Navigator.pop(context);
         _gameState.action(SetScenarioCommand(name, false));
-        //Navigator.pop(context);
       },
     );
   }
@@ -232,6 +231,9 @@ class SelectScenarioMenuState extends State<SelectScenarioMenu> {
         }
       }
     }
+    return [Wrap(
+      children: retVal,
+    )];
     return retVal;
   }
 
@@ -240,8 +242,6 @@ class SelectScenarioMenuState extends State<SelectScenarioMenu> {
     return Container(
         constraints: const BoxConstraints(maxWidth: 400),
         child: Card(
-            //color: Colors.transparent,
-            // shadowColor: Colors.transparent,
             margin: const EdgeInsets.all(2),
             child: Stack(children: [
               Column(
@@ -249,6 +249,7 @@ class SelectScenarioMenuState extends State<SelectScenarioMenu> {
                   const SizedBox(
                     height: 20,
                   ),
+
                   Column(children: [
                     const Text("Set Scenario", style: TextStyle(fontSize: 18)),
                     ExpansionTile(
@@ -274,7 +275,6 @@ class SelectScenarioMenuState extends State<SelectScenarioMenu> {
                               //    SetScenarioCommand(_foundScenarios[0], false));
                               //Navigator.pop(context);
                             }
-                            //Navigator.pop(context, this._textController.text);
                           }
                         },
                         child: TextField(

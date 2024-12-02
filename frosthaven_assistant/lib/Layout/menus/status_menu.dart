@@ -117,7 +117,6 @@ class StatusMenuState extends State<StatusMenu> {
           height: 40 * scale,
           child: IconButton(
               icon: Image.asset('assets/images/psd/sub.png'),
-              //iconSize: 30,
               onPressed: () {
                 if (notifier.value > 0) {
                   _gameState.action(ChangeChillCommand(-1, figureId, ownerId));
@@ -163,7 +162,6 @@ class StatusMenuState extends State<StatusMenu> {
           height: 40 * scale,
           child: IconButton(
             icon: Image.asset('assets/images/psd/add.png'),
-            //iconSize: 30,
             onPressed: () {
               if (notifier.value < maxValue) {
                 _gameState.action(ChangeChillCommand(1, figureId, ownerId));
@@ -178,7 +176,6 @@ class StatusMenuState extends State<StatusMenu> {
 
   Widget buildSummonButton(String figureId, String ownerId, double scale) {
     String imagePath = "assets/images/summon/green.png";
-    // enabled = false;
     return ValueListenableBuilder<int>(
         valueListenable: _gameState.commandIndex,
         builder: (context, value, child) {
@@ -205,7 +202,6 @@ class StatusMenuState extends State<StatusMenu> {
                   ),
                   borderRadius: BorderRadius.all(Radius.circular(30 * scale))),
               child: IconButton(
-                  //iconSize: 24,
                   icon: isActive
                       ? Image(
                           height: 24 * scale,
@@ -256,7 +252,6 @@ class StatusMenuState extends State<StatusMenu> {
       }
       //immobilize or muddle: also chill - doesn't matter: monster can't be chilled and players don't have immunities.
     }
-    // enabled = false;
     return ValueListenableBuilder<int>(
         valueListenable: _gameState.commandIndex,
         builder: (context, value, child) {
@@ -305,7 +300,6 @@ class StatusMenuState extends State<StatusMenu> {
                   ),
                   borderRadius: BorderRadius.all(Radius.circular(30 * scale))),
               child: IconButton(
-                //iconSize: 24,
                 icon: enabled
                     ? isActive
                         ? ConditionIcon(
@@ -360,7 +354,6 @@ class StatusMenuState extends State<StatusMenu> {
                               )),
                         ],
                       ),
-                //iconSize: 30,
                 onPressed: enabled
                     ? () {
                         if (!isActive) {
@@ -400,7 +393,7 @@ class StatusMenuState extends State<StatusMenu> {
       name = widget.monsterId!; //this is no good
       ownerId = widget.monsterId!;
     } else if (widget.characterId != null) {
-      name = widget.characterId!;
+      name = widget.characterId!; //now this is no good either...
       ownerId = name;
     }
 
@@ -456,6 +449,10 @@ class StatusMenuState extends State<StatusMenu> {
           character = item as Character;
         }
       }
+    }
+
+    if (figure is CharacterState && character != null) {
+      name = character.characterClass.name;
     }
 
     double scale = 1;
@@ -656,7 +653,6 @@ class StatusMenuState extends State<StatusMenu> {
                             height: 42 * scale,
                             child: IconButton(
                               icon: Image.asset('assets/images/psd/skull.png'),
-                              //iconSize: 10,
                               onPressed: () {
                                 Navigator.pop(context);
                                 _gameState.action(ChangeHealthCommand(
@@ -671,7 +667,6 @@ class StatusMenuState extends State<StatusMenu> {
                                 icon: Image.asset(
                                     colorBlendMode: BlendMode.multiply,
                                     'assets/images/psd/level.png'),
-                                //iconSize: 10,
                                 onPressed: () {
                                   if (figure is CharacterState) {
                                     openDialog(
@@ -713,7 +708,6 @@ class StatusMenuState extends State<StatusMenu> {
                 SizedBox(
                   height: 2 * scale,
                 ),
-                //const Text("Status", style: TextStyle(fontSize: 18)),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

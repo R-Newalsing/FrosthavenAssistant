@@ -45,7 +45,11 @@ class MonsterStatCardWidget extends StatelessWidget {
           false);
     } else if (data.monsterInstances.length < data.type.count - 1) {
       if (settings.randomStandees.value == true) {
+        //todo: no logic in layout
         int standeeNr = GameMethods.getRandomStandee(data);
+        if(getIt<GameState>().currentCampaign.value == "Buttons and Bugs") {
+          standeeNr = GameMethods.getNextAvailableBnBStandee(data);
+        }
         if (standeeNr != 0) {
           BluetoothStandeeTransition.context = context;
           getIt<GameState>().action(AddStandeeCommand(
@@ -145,8 +149,6 @@ class MonsterStatCardWidget extends StatelessWidget {
           left: 64.0 * scale,
           top: 20.8 * scale,
           child: Column(
-            //mainAxisAlignment: MainAxisAlignment.center,
-            //mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(health, style: leftStyle),
               Text(move, style: leftStyle),
@@ -162,8 +164,6 @@ class MonsterStatCardWidget extends StatelessWidget {
             width: 58.4 * scale,
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
-                //alignment: Alignment.topRight,
-                //width: 67*tempScale*scale,
                 children: [
                   LineBuilder.createLines(
                       normal.attributes,
@@ -179,9 +179,6 @@ class MonsterStatCardWidget extends StatelessWidget {
           right: 61.6 * scale,
           top: 20.8 * scale,
           child: Column(
-            //crossAxisAlignment: CrossAxisAlignment.start,
-            //mainAxisAlignment: MainAxisAlignment.center,
-            //mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(StatCalculator.calculateFormula(elite!.health).toString(),
                   style: rightStyle),
@@ -342,7 +339,6 @@ class MonsterStatCardWidget extends StatelessWidget {
         shadows: [shadow]);
 
     return Stack(
-      //alignment: Alignment.center,
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(8.0 * scale),
@@ -371,8 +367,6 @@ class MonsterStatCardWidget extends StatelessWidget {
           width: 24 * scale,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
-            // mainAxisAlignment: MainAxisAlignment.end,
-            // mainAxisSize: MainAxisSize.max,
             children: <Widget>[
               Text(health, style: leftStyle),
               Text(move, style: leftStyle),
@@ -396,8 +390,6 @@ class MonsterStatCardWidget extends StatelessWidget {
             width: 128 * scale, //useful or not?
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                //alignment: Alignment.topRight,
-                //width: 67*tempScale*scale,
                 children: [
                   bossOtherAttributes.isNotEmpty
                       ? Row(children: [
@@ -417,7 +409,6 @@ class MonsterStatCardWidget extends StatelessWidget {
                       : Container(),
                   if (bossOtherAttributes.isNotEmpty)
                     Image.asset(
-                      // alignment: alignment == CrossAxisAlignment.start? Alignment.centerLeft : Alignment.center,
                       scale: 1 / (scale * 0.15),
                       height: 1 * scale,
                       fit: BoxFit.fill,
@@ -428,7 +419,6 @@ class MonsterStatCardWidget extends StatelessWidget {
                     ),
                   normal.special1.isNotEmpty
                       ? Row(
-                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                               Text(
@@ -451,7 +441,6 @@ class MonsterStatCardWidget extends StatelessWidget {
                       : Container(),
                   normal.special2.isNotEmpty
                       ? Image.asset(
-                          // alignment: alignment == CrossAxisAlignment.start? Alignment.centerLeft : Alignment.center,
                           scale: 1 / (scale * 0.15),
                           height: 1 * scale,
                           fit: BoxFit.fill,
@@ -585,8 +574,7 @@ class MonsterStatCardWidget extends StatelessWidget {
     bool isBoss = data.type.levels[data.level.value].boss != null;
 
     return SizedBox(
-        //height: 93.5 * scale,
-        width: 166 * scale, //167
+        width: 166 * scale,
         child: Stack(children: [
           GestureDetector(
               onDoubleTap: () {

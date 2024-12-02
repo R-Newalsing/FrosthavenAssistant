@@ -99,7 +99,6 @@ Widget defaultBuildDraggableFeedback(
       color: Colors.transparent,
       borderRadius: BorderRadius.zero,
       child: Card(
-          //shadowColor: Colors.red,
           color: Colors.transparent,
           child: ConstrainedBox(constraints: constraints, child: child)),
     ),
@@ -152,16 +151,16 @@ bool hasGHVersion(String name) {
   if (name == "bane") {
     return false;
   }
-  if (name == "air") {
+  if (name.contains("air")) {
     return false;
   }
   if (name.contains("earth")) {
     return false;
   }
-  if (name == "ice") {
+  if (name.contains("ice")) {
     return false;
   }
-  if (name == "dark") {
+  if (name.contains("dark")) {
     return false;
   }
   if (name == "light") {
@@ -170,7 +169,7 @@ bool hasGHVersion(String name) {
   if (name == "any") {
     return false;
   }
-  if (name == "fire") {
+  if (name.contains("fire")) {
     return false;
   }
   return true;

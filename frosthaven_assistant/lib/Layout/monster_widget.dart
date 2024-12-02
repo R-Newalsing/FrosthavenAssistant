@@ -102,7 +102,6 @@ class MonsterWidgetState extends State<MonsterWidget> {
           )),
       Container(
           width: height * 0.95,
-          //height: height,
           alignment: Alignment.bottomCenter,
           margin: EdgeInsets.only(bottom: frosthavenStyle ? 2 * scale : 0),
           child: Text(
@@ -166,7 +165,6 @@ class MonsterWidgetState extends State<MonsterWidget> {
               width: getMainListWidth(context) - 3.2 * scale,
               child: ValueListenableBuilder<int>(
                   valueListenable: getIt<GameState>().killMonsterStandee,
-                  // widget.data.monsterInstances,
                   builder: (context, value, child) {
                     return buildMonsterBoxGrid(scale);
                   }),

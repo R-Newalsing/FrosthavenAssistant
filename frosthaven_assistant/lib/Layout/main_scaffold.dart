@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frosthaven_assistant/Layout/modifier_deck_widget.dart';
 import 'package:frosthaven_assistant/Layout/section_list.dart';
@@ -22,6 +23,9 @@ Widget createMainScaffold(BuildContext context) {
   return ValueListenableBuilder<bool>(
       valueListenable: loading,
       builder: (context, value, child) {
+        if (kDebugMode) {
+          print("loading is: $loading");
+        }
         return ValueListenableBuilder<double>(
             valueListenable: getIt<Settings>().userScalingBars,
             builder: (context, value, child) {
@@ -34,7 +38,6 @@ Widget createMainScaffold(BuildContext context) {
                   maintainBottomViewPadding: true,
                   child: Scaffold(
                     resizeToAvoidBottomInset: false,
-                    //drawerScrimColor: Colors.yellow,
                     bottomNavigationBar: createBottomBar(context),
                     appBar: createTopBar(),
                     drawer: createMainMenu(context),
@@ -132,6 +135,7 @@ Widget createMainScaffold(BuildContext context) {
                                                   if (GameMethods.shouldShowAlliesDeck())
                                                     const ModifierDeckWidget(name: "allies"),
                                                   if (!modFitsOnBar &&
+                                                      gameState.currentCampaign.value != "Buttons and Bugs" && //hide amd deck for buttons and bugs
                                                       getIt<Settings>().showAmdDeck.value)
                                                     Container(
                                                         margin: EdgeInsets.only(

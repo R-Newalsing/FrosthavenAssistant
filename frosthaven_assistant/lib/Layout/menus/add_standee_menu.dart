@@ -43,6 +43,23 @@ class AddStandeeMenuState extends State<AddStandeeMenu> {
       color = Colors.red;
       type = MonsterType.boss;
     }
+
+    if (getIt<GameState>().currentCampaign.value == "Buttons and Bugs") {
+      if(nr == 1) {
+        color = Colors.green;
+      }
+      if(nr == 2) {
+        color = Colors.blue;
+      }
+      if(nr == 3) {
+        color = Colors.purple;
+      }
+      if(nr == 4) {
+        color = Colors.red;
+      }
+    }
+
+
     bool isOut = false;
     for (var item in widget.monster.monsterInstances) {
       if (item.standeeNr == nr) {
@@ -105,13 +122,6 @@ class AddStandeeMenuState extends State<AddStandeeMenu> {
         //need to set any width to center content, overridden by dialog default min width.
         height: height * scale,
         decoration: BoxDecoration(
-          //color: Colors.black,
-          //borderRadius: BorderRadius.all(Radius.circular(8)),
-
-          /*border: Border.fromBorderSide(BorderSide(
-            color: Colors.blueGrey,
-            width: 10
-          )),*/
           image: DecorationImage(
             colorFilter: ColorFilter.mode(
                 Colors.black.withOpacity(0.8), BlendMode.dstATop),

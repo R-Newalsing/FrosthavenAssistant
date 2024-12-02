@@ -138,8 +138,6 @@ class MonsterBox extends StatelessWidget {
                 ),
               ],
             ),
-            //color: Color(int.parse("7A000000", radix: 16)),
-            //black with some opacity
             child: Stack(alignment: Alignment.centerLeft, children: [
               Image(
                 height: 30 * scale,
@@ -161,7 +159,6 @@ class MonsterBox extends StatelessWidget {
                       color: BluetoothMethods.isVisibile(data)
                           ? Colors.blue
                           : null,
-                      //fit: BoxFit.contain,
                       height: 100 * scale,
                       width: 17 * scale,
                       fit: BoxFit.cover,
@@ -184,16 +181,13 @@ class MonsterBox extends StatelessWidget {
               ),
               Positioned(
                 left: data.health.value > 99 ? 22 * scale : 23 * scale,
-                //width: width-20*scale,
                 top: 0,
-
                 child: Container(
                     padding: EdgeInsets.zero,
                     margin: EdgeInsets.zero,
                     child: Row(children: [
                       Column(children: [
                         Image(
-                          //fit: BoxFit.contain,
                           color: Colors.red,
                           height: 7 * scale,
                           image: const AssetImage("assets/images/blood.png"),
@@ -277,6 +271,21 @@ class MonsterBox extends StatelessWidget {
       color = Colors.red;
     }
 
+    if (getIt<GameState>().currentCampaign.value == "Buttons and Bugs") {
+      if (data.standeeNr == 1) {
+        color = Colors.green;
+      }
+      if (data.standeeNr == 2) {
+        color = Colors.blue;
+      }
+      if (data.standeeNr == 3) {
+        color = Colors.purple;
+      }
+      if (data.standeeNr == 4) {
+        color = Colors.red;
+      }
+    }
+
     double width = MonsterBox.getWidth(scale, data);
     String? characterId;
     if (ownerId != data.name) {
@@ -286,8 +295,6 @@ class MonsterBox extends StatelessWidget {
     return Material(
         color: Colors.transparent,
         child: InkWell(
-            //splashColor: Colors.brown,
-            //focusColor: Colors.amber,
             onTap: () {
               //open stats menu
               if (!blockInput) {
