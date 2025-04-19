@@ -51,15 +51,20 @@ class Client {
     }
   }
 
+  static bool pinging =
+      false; //to not restart this ping sub process, if one is running
   void _sendPing() {
     if (_connection.established() &&
-        _settings.client.value == ClientState.connected) {
+        _settings.client.value == ClientState.connected &&
+        pinging == false) {
       Future.delayed(const Duration(seconds: 12), () {
         if (_serverResponsive == true) {
+          pinging = true;
           _communication.sendToAll("ping");
           _sendPing();
           _serverResponsive = false; //set back to true when get response
         } else {
+          pinging = false;
           disconnect("Server unresponsive. Client disconnected.");
         }
       });

@@ -63,7 +63,6 @@ class Server extends GameServer {
 
   @override
   void updateStateFromMessage(StateUpdateMessage message, Socket client) {
-    print(message);
     if (message.index > _gameState.commandDescriptions.length) {
       //invalid: index too high. send correction to clients
       String commandDescription = "";
@@ -105,12 +104,21 @@ class Server extends GameServer {
     return "Index:${_gameState.commandIndex.value}Description:${commandDescription}GameState:${_gameState.gameSaveStates.last!.getState()}";
   }
 
+  //to not restart this ping sub process, if one is running
+  static bool pinging = false;
   @override
   void sendPing() {
-    if (serverSocket != null && getIt<Settings>().server.value != false) {
+    if (serverSocket != null &&
+        getIt<Settings>().server.value != false &&
+        pinging == false) {
       Future.delayed(const Duration(seconds: 20), () {
-        send("ping");
-        sendPing();
+        if (serverSocket == null || getIt<Settings>().server.value == false) {
+          pinging = false;
+        } else {
+          pinging = true;
+          send("ping");
+          sendPing();
+        }
       });
     }
   }

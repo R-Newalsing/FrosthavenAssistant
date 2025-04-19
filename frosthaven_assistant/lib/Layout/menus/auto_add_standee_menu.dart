@@ -41,8 +41,13 @@ class AddStandeeMenuState extends State<AutoAddStandeeMenu> {
     startCommandIndex = _gameState.commandIndex.value;
 
     for (var data in widget.monsterData) {
-      Monster monster = _gameState.currentList
-          .firstWhere((element) => element.id == data.name) as Monster;
+      Monster? monster = _gameState.currentList.firstWhereOrNull(
+              (element) => element.id == data.name && element is Monster)
+          as Monster?;
+      if (monster == null) {
+        //to avoid exception. this is still a bug.
+        continue;
+      }
       List<int> someElites = [];
       List<int> someNormals = [];
       for (var item in monster.monsterInstances) {
@@ -292,8 +297,8 @@ class AddStandeeMenuState extends State<AutoAddStandeeMenu> {
             }
           }
 
-          Monster? monster = _gameState.currentList
-                  .firstWhereOrNull((element) => element.id == data.name)
+          Monster? monster = _gameState.currentList.firstWhereOrNull(
+                  (element) => element.id == data.name && element is Monster)
               as Monster?;
           if (monster == null) {
             WidgetsBinding.instance.addPostFrameCallback((timeStamp) {

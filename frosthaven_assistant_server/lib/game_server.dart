@@ -11,7 +11,7 @@ class StateUpdateMessage {
 }
 
 abstract class GameServer {
-  final int serverVersion = 1100;
+  final int serverVersion = 1101;
 
   ServerSocket? _serverSocket;
   ServerSocket? get serverSocket {
@@ -148,9 +148,12 @@ abstract class GameServer {
         onError: (error) {
           log(error.toString());
           setNetworkMessage(error.toString());
+          // Tolerate aborted connections if we're in a consistent state (i.e.,
+          // not mid-message). This is particularly relevant for iOS clients,
+          // where the app usually doesn't get a chance to close the socket
+          // gracefully when the device is locked.
           if (error is SocketException &&
-              (error.osError?.errorCode == 103 ||
-                  error.osError?.errorCode == 32)) {
+              (error.osError?.errorCode == 103 || !leftOverMessage.isEmpty)) {
             stopServer(error.toString());
           }
         },

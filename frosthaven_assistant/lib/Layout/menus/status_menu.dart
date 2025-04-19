@@ -471,8 +471,7 @@ class StatusMenuState extends State<StatusMenu> {
           30 * scale +
           ((hasIncarnate && widget.monsterId != null && !isSummon)
               ? 40 * scale
-              : 0) +
-          (50 * scale),
+              : 0),
       decoration: BoxDecoration(
         image: DecorationImage(
           colorFilter: ColorFilter.mode(
@@ -538,7 +537,10 @@ class StatusMenuState extends State<StatusMenu> {
                   if (widget.monsterId != null) {
                     for (var item in _gameState.currentList) {
                       if (item.id == widget.monsterId) {
-                        if (item is Monster && item.isAlly) {
+                        if (item is Monster &&
+                            item.isAlly &&
+                            (getIt<GameState>().allyDeckInOGGloom.value ||
+                                !GameMethods.isOgGloomEdition())) {
                           deck = _gameState.modifierDeckAllies;
                         }
                       }
