@@ -38,12 +38,6 @@ android {
 
     signingConfigs {
     }
-
-    buildTypes {
-        release {
-            signingConfig = signingConfigs.release
-        }
-    }
 }
 
 flutter {

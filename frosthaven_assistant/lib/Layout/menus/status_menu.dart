@@ -467,7 +467,7 @@ class StatusMenuState extends State<StatusMenu> {
 
     return Container(
       width: 340 * scale,
-      height: 220 * scale +
+      height: 270 * scale +
           30 * scale +
           ((hasIncarnate && widget.monsterId != null && !isSummon)
               ? 40 * scale
